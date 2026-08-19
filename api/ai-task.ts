@@ -1,8 +1,8 @@
 import type { Request, Response } from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenAI } from '@google/genai';
-import { AiBusinessService } from '../services/geminiService';
-import { LogoService } from '../services/logoService';
+import { AiBusinessService } from '../services/geminiService.js';
+import { LogoService } from '../services/logoService.js';
 
 // Vercel Serverless Function Configuration - Max Duration 60 seconds
 export const config = {

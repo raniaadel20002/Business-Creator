@@ -1,8 +1,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { UserData, BusinessPlan } from "../types";
-import { IdeaValidationEngine } from "./ideaValidationEngine";
-import { buildPlanPrompt, getUserMandatesPrompt, parseCapitalDetails, STAGE_1_AND_2_COMBINED_PROMPT, STAGE_3_BLUEPRINT_EXECUTION_PROMPT, BUSINESS_CREATOR_CORE_ENGINE_INSTRUCTION } from "./prompts/projectPrompts";
-import { createGeminiClient, getModelFallbackList } from "./geminiClient";
+import { UserData, BusinessPlan } from "../types.js";
+import { IdeaValidationEngine } from "./ideaValidationEngine.js";
+import { buildPlanPrompt, getUserMandatesPrompt, parseCapitalDetails, STAGE_1_AND_2_COMBINED_PROMPT, STAGE_3_BLUEPRINT_EXECUTION_PROMPT, BUSINESS_CREATOR_CORE_ENGINE_INSTRUCTION } from "./prompts/projectPrompts.js";
+import { createGeminiClient, getModelFallbackList } from "./geminiClient.js";
 
 const maxDuration = 60;
 

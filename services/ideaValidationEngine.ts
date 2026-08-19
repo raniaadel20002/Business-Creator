@@ -1,7 +1,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { UserData, BusinessPlan, RejectionReport, ValidationResult, ExecutionBlueprint } from "../types";
-import { parseCapitalDetails } from "./prompts/projectPrompts";
-import { createGeminiClient } from "./geminiClient";
+import { UserData, BusinessPlan, RejectionReport, ValidationResult, ExecutionBlueprint } from "../types.js";
+import { parseCapitalDetails } from "./prompts/projectPrompts.js";
+import { createGeminiClient } from "./geminiClient.js";
 
 
 interface ProjectTypeClassification {

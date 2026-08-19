@@ -1,21 +1,21 @@
 import { GoogleGenAI } from "@google/genai";
 
 function getGeminiApiKey(): string | undefined {
-  let key: string | undefined = undefined;
+  // 1. In Vite browser build: statically inlined during vite build
+  try {
+    const envKey = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.GEMINI_API_KEY;
+    if (envKey) return envKey;
+  } catch (e) {}
+
+  // 2. In Node.js / Vercel Serverless runtime: read from process.env
   try {
     if (typeof process !== 'undefined' && process.env) {
-      key = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || (process.env as any).geminiApiKey;
+      const procKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || (process.env as any).geminiApiKey;
+      if (procKey) return procKey;
     }
   } catch (e) {}
 
-  if (!key) {
-    try {
-      if (typeof import.meta !== 'undefined' && (import.meta as any)?.env) {
-        key = (import.meta as any).env.VITE_GEMINI_API_KEY || (import.meta as any).env.GEMINI_API_KEY;
-      }
-    } catch (e) {}
-  }
-  return key;
+  return undefined;
 }
 
 export function createGeminiClient(): GoogleGenAI {

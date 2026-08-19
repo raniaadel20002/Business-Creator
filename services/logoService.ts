@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { createGeminiClient, getModelFallbackList } from "./geminiClient";
+import { createGeminiClient, getModelFallbackList } from "./geminiClient.js";
 
 export class LogoService {
   private ai: GoogleGenAI;
