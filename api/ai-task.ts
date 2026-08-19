@@ -42,8 +42,16 @@ export default async function handler(req: Request, res: Response) {
     return res.status(405).json({ success: false, error: 'Method Not Allowed' });
   }
 
-  const { type, payload, userId, stream } = req.body || {};
-  const isStreamingRequested = stream === true || req.headers.accept?.includes('text/event-stream');
+  let body = req.body;
+  if (typeof body === 'string') {
+    try {
+      body = JSON.parse(body);
+    } catch (e) {
+      body = {};
+    }
+  }
+  const { type, payload, userId, stream } = body || {};
+  const isStreamingRequested = stream === true || req.headers?.accept?.includes('text/event-stream');
 
   // Normalize Gemini Key
   if (!process.env.GEMINI_API_KEY && process.env.VITE_GEMINI_API_KEY) {
@@ -63,6 +71,7 @@ export default async function handler(req: Request, res: Response) {
     res.setHeader('Cache-Control', 'no-cache, no-transform');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('X-Accel-Buffering', 'no');
+    if ((res as any).flushHeaders) (res as any).flushHeaders();
 
     // Send initial handshake ping immediately
     res.write(`data: ${JSON.stringify({ type: 'heartbeat', status: 'started', time: Date.now() })}\n\n`);
