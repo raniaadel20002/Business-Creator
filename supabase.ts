@@ -39,6 +39,7 @@ export function subscribeToTaskCompletions(callback: TaskCallback) {
 }
 
 export async function runAiTask(type: string, payload: any, userId: string): Promise<any> {
+  // 1. Attempt 1: Serverless API endpoint
   try {
     const response = await fetch('/api/ai-task', {
       method: 'POST',
@@ -49,97 +50,143 @@ export async function runAiTask(type: string, payload: any, userId: string): Pro
       body: JSON.stringify({ type, payload, userId, stream: true }),
     });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(errText || `HTTP error! status: ${response.status}`);
-    }
+    if (response.ok) {
+      let finalData: any = null;
+      const contentType = response.headers.get('content-type') || '';
 
-    let finalData: any = null;
-    const contentType = response.headers.get('content-type') || '';
+      // Handle Streaming / Server-Sent Events (SSE)
+      if (contentType.includes('text/event-stream') && response.body) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
 
-    // Handle Streaming / Server-Sent Events (SSE) to prevent Vercel idle connection drop
-    if (contentType.includes('text/event-stream') && response.body) {
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder('utf-8');
-      let buffer = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (trimmed.startsWith('data:')) {
-            try {
-              const jsonStr = trimmed.slice(5).trim();
-              if (jsonStr) {
-                const parsed = JSON.parse(jsonStr);
-                if (parsed.success !== undefined) {
-                  finalData = parsed;
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed.startsWith('data:')) {
+              try {
+                const jsonStr = trimmed.slice(5).trim();
+                if (jsonStr) {
+                  const parsed = JSON.parse(jsonStr);
+                  if (parsed.success !== undefined) {
+                    finalData = parsed;
+                  }
                 }
+              } catch (pErr) {
+                console.warn('[Stream Parser Warning]', pErr);
               }
-            } catch (pErr) {
-              console.warn('[Stream Parser Warning]', pErr);
             }
           }
         }
+
+        if (buffer.trim().startsWith('data:')) {
+          try {
+            const parsed = JSON.parse(buffer.trim().slice(5).trim());
+            if (parsed.success !== undefined) finalData = parsed;
+          } catch {}
+        }
+      } else {
+        finalData = await response.json();
       }
 
-      if (buffer.trim().startsWith('data:')) {
+      if (finalData && finalData.success && finalData.result) {
+        const mockTaskId = `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        taskCallbacks.forEach(cb => {
+          try {
+            cb(mockTaskId, { id: mockTaskId, status: 'completed', type, payload, result: finalData.result });
+          } catch (e) {}
+        });
+        return finalData.result;
+      }
+    }
+  } catch (apiErr) {
+    console.warn("[runAiTask] Serverless endpoint unavailable or errored, falling back to direct client execution:", apiErr);
+  }
+
+  // 2. Attempt 2: Direct Client Execution Fallback (Zero-Failure Architecture)
+  console.log(`[runAiTask] Executing ${type} directly via resilient client engine...`);
+  try {
+    let result: any = null;
+
+    if (type === 'generate_plan') {
+      const { AiBusinessService } = await import('./services/geminiService');
+      const service = new AiBusinessService();
+      result = await service.generateBusinessPlan(payload.userData, payload.isPro);
+    } else if (type === 'complete_pro') {
+      const { AiBusinessService } = await import('./services/geminiService');
+      const service = new AiBusinessService();
+      result = await service.completeProBusinessPlan(payload.currentPlan);
+    } else if (type === 'generate_logo') {
+      const { LogoService } = await import('./services/logoService');
+      const logoService = new LogoService();
+      result = await logoService.generateLogoSystem(payload.prompt, payload.projectName, payload.idea, payload.styleDesc);
+    } else if (type === 'chat_message') {
+      const { GoogleGenAI } = await import('@google/genai');
+      let key = (import.meta as any).env?.VITE_GEMINI_API_KEY || (import.meta as any).env?.GEMINI_API_KEY;
+      if (!key && typeof process !== 'undefined' && process.env) {
+        key = process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || (process.env as any).geminiApiKey;
+      }
+      const gAI = new GoogleGenAI(key ? { apiKey: key } : {});
+      const modelsToTry = ["gemini-2.5-flash", "gemini-flash-latest", "gemini-3.1-flash-lite"];
+      let chatRes: string | null = null;
+      let lastErr: any = null;
+
+      for (const modelName of modelsToTry) {
         try {
-          const parsed = JSON.parse(buffer.trim().slice(5).trim());
-          if (parsed.success !== undefined) finalData = parsed;
-        } catch {}
-      }
-    } else {
-      // Standard JSON response
-      finalData = await response.json();
-    }
-
-    if (!finalData || !finalData.success) {
-      throw new Error(finalData?.error || "حدث خطأ أثناء معالجة الطلب بالذكاء الاصطناعي.");
-    }
-
-    const mockTaskId = `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    taskCallbacks.forEach(cb => {
-      try {
-        cb(mockTaskId, { id: mockTaskId, status: 'completed', type, payload, result: finalData.result });
-      } catch (e) {
-        console.error("Error in task callback:", e);
-      }
-    });
-
-    return finalData.result;
-  } catch (error: any) {
-    console.error("Error executing runAiTask over HTTP, attempting async fallback:", error);
-    
-    // Fallback: Check if Supabase connection is available to create an async DB task
-    try {
-      if (supabase && userId && userId !== 'anonymous') {
-        const { data: dbTask, error: dbErr } = await supabase
-          .from('ai_tasks')
-          .insert({
-            user_id: userId,
-            task_type: type,
-            payload: payload || {},
-            status: 'pending'
-          })
-          .select()
-          .single();
-
-        if (!dbErr && dbTask) {
-          console.log("[Supabase Task Queue] Created backup task:", dbTask.id);
+          const resp = await gAI.models.generateContent({
+            model: modelName,
+            contents: payload.chatHistory || [],
+            config: {
+              systemInstruction: payload.systemInstruction || "أنت المستشار الريادي الذكي لمنصة Business Creator AI.",
+              temperature: 0.7,
+            }
+          });
+          if (resp && resp.text) {
+            chatRes = resp.text;
+            break;
+          }
+        } catch (err) {
+          lastErr = err;
         }
       }
-    } catch (fbErr) {
-      console.warn("[Async Fallback Error]", fbErr);
+
+      if (!chatRes) throw lastErr || new Error("Chat model generation failed.");
+      result = chatRes;
     }
 
-    throw error;
+    if (result) {
+      const mockTaskId = `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      taskCallbacks.forEach(cb => {
+        try {
+          cb(mockTaskId, { id: mockTaskId, status: 'completed', type, payload, result });
+        } catch (e) {}
+      });
+      return result;
+    }
+    throw new Error("لم يتم إرجاع أي نتيجة من محرك الذكاء الاصطناعي.");
+  } catch (directErr: any) {
+    console.error("[runAiTask] Direct execution failed, recording async backup task:", directErr);
+    
+    // Attempt 3: Record backup task in Supabase DB
+    try {
+      if (supabase && userId && userId !== 'anonymous') {
+        await supabase.from('ai_tasks').insert({
+          user_id: userId,
+          task_type: type,
+          payload: payload || {},
+          status: 'pending'
+        });
+      }
+    } catch (fbErr) {}
+
+    throw directErr;
   }
 }
 
