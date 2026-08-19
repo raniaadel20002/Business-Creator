@@ -8,10 +8,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 // ---- Auth helpers ----
 
 export const signInWithGoogle = async () => {
+  const redirectUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: window.location.origin,
+      redirectTo: redirectUrl,
     },
   });
   if (error) throw error;

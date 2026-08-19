@@ -45,6 +45,14 @@ export default async function handler(req: Request, res: Response) {
   const { type, payload, userId, stream } = req.body || {};
   const isStreamingRequested = stream === true || req.headers.accept?.includes('text/event-stream');
 
+  // Normalize Gemini Key
+  if (!process.env.GEMINI_API_KEY && process.env.VITE_GEMINI_API_KEY) {
+    process.env.GEMINI_API_KEY = process.env.VITE_GEMINI_API_KEY;
+  }
+  if (!process.env.GEMINI_API_KEY && process.env.geminiApiKey) {
+    process.env.GEMINI_API_KEY = process.env.geminiApiKey;
+  }
+
   console.log(`[AI Task Handler] Processing task type: ${type} for user: ${userId || 'anonymous'} (Streaming: ${isStreamingRequested})`);
 
   let heartbeatInterval: any = null;
