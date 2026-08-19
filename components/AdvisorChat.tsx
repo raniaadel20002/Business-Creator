@@ -757,7 +757,7 @@ const AdvisorChat: React.FC<AdvisorChatProps> = ({ profile, plan, onClose, onUpg
         console.log("Chat response generation aborted by user.");
         return;
       }
-      const fullResponse = res.text || '';
+      const fullResponse = typeof res === 'string' ? res : (res?.text || res?.content || res?.result || '');
 
       const aiMessage: ChatMessage = {
         role: 'model',
