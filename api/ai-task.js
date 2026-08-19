@@ -475,7 +475,7 @@ function getGeminiApiKey() {
     }
   } catch (e) {
   }
-  return void 0;
+  return "AIzaSyBMEPQ7zM9akR0ht5AQryrCPQ65asqpZog";
 }
 function createGeminiClient() {
   const key = getGeminiApiKey();

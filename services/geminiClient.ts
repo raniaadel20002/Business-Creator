@@ -15,7 +15,7 @@ function getGeminiApiKey(): string | undefined {
     }
   } catch (e) {}
 
-  return undefined;
+  return "AIzaSyBMEPQ7zM9akR0ht5AQryrCPQ65asqpZog";
 }
 
 export function createGeminiClient(): GoogleGenAI {
