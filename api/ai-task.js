@@ -3580,23 +3580,48 @@ async function handler(req, res) {
       const logoService = new LogoService();
       result = await logoService.generateLogoSystem(prompt, projectName, idea, styleDesc);
     } else if (type === "chat_message") {
-      const { systemInstruction: clientInstruction, chatHistory } = payload || {};
-      let key = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+      const { systemInstruction: clientInstruction, chatHistory: rawChatHistory } = payload || {};
+      let key = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || "AIzaSyBMEPQ7zM9akR0ht5AQryrCPQ65asqpZog";
       const gAI = new GoogleGenAI5(key ? { apiKey: key } : {});
+      const cleanHistory = [];
+      if (Array.isArray(rawChatHistory)) {
+        for (const item of rawChatHistory) {
+          const role = item.role === "model" ? "model" : "user";
+          const text = item.parts?.[0]?.text || (typeof item.content === "string" ? item.content : "");
+          if (!text || typeof text !== "string" || text.trim() === "") continue;
+          if (cleanHistory.length === 0 && role === "model") {
+            continue;
+          }
+          const lastTurn = cleanHistory[cleanHistory.length - 1];
+          if (lastTurn && lastTurn.role === role) {
+            lastTurn.parts[0].text += `
+${text.trim()}`;
+          } else {
+            cleanHistory.push({
+              role,
+              parts: [{ text: text.trim() }]
+            });
+          }
+        }
+      }
       const modelsToTry = ["gemini-2.5-flash", "gemini-flash-latest", "gemini-3.1-flash-lite"];
       let lastChatError = null;
       let chatRes = null;
       const safeSystemInstruction = typeof clientInstruction === "string" && clientInstruction.trim().length > 0 ? clientInstruction : "\u0623\u0646\u062A \u0627\u0644\u0645\u0633\u062A\u0634\u0627\u0631 \u0627\u0644\u0631\u064A\u0627\u062F\u064A \u0627\u0644\u0630\u0643\u064A \u0644\u0645\u0646\u0635\u0629 Business Creator AI.";
       for (const modelName of modelsToTry) {
         try {
-          const response = await gAI.models.generateContent({
+          const generatePromise = gAI.models.generateContent({
             model: modelName,
-            contents: chatHistory || [],
+            contents: cleanHistory.length > 0 ? cleanHistory : [{ role: "user", parts: [{ text: "\u0645\u0631\u062D\u0628\u0627\u064B" }] }],
             config: {
               systemInstruction: safeSystemInstruction,
               temperature: 0.7
             }
           });
+          const timeoutPromise = new Promise(
+            (_, reject) => setTimeout(() => reject(new Error(`Timeout on model ${modelName}`)), 12e3)
+          );
+          const response = await Promise.race([generatePromise, timeoutPromise]);
           if (response && response.text) {
             chatRes = response.text;
             break;
@@ -3607,7 +3632,7 @@ async function handler(req, res) {
         }
       }
       if (!chatRes) {
-        throw new Error(`\u062A\u0639\u0630\u0631 \u0627\u0644\u062D\u0635\u0648\u0644 \u0639\u0644\u0649 \u0627\u0633\u062A\u062C\u0627\u0628\u0629 \u0645\u0646 \u0627\u0644\u0645\u0633\u062A\u0634\u0627\u0631 \u0627\u0644\u0630\u0643\u064A: ${lastChatError?.message || "\u062E\u0637\u0623 \u063A\u064A\u0631 \u0645\u0639\u0631\u0648\u0641"}`);
+        throw new Error(`\u062A\u0639\u0630\u0631 \u0627\u0644\u062D\u0635\u0648\u0644 \u0639\u0644\u0649 \u0627\u0633\u062A\u062C\u0627\u0628\u0629 \u0645\u0646 \u0627\u0644\u0645\u0633\u062A\u0634\u0627\u0631 \u0627\u0644\u0630\u0643\u064A: ${lastChatError?.message || "\u064A\u0631\u062C\u0649 \u0625\u0639\u0627\u062F\u0629 \u0627\u0644\u0645\u062D\u0627\u0648\u0644\u0629"}`);
       }
       result = chatRes;
     } else {

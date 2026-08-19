@@ -133,7 +133,29 @@ export async function runAiTask(type: string, payload: any, userId: string): Pro
       if (!key && typeof process !== 'undefined' && process.env) {
         key = process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || (process.env as any).geminiApiKey;
       }
-      const gAI = new GoogleGenAI(key ? { apiKey: key } : {});
+      if (!key) key = "AIzaSyBMEPQ7zM9akR0ht5AQryrCPQ65asqpZog";
+
+      const gAI = new GoogleGenAI({ apiKey: key });
+
+      // Sanitize chat history
+      const cleanHistory: any[] = [];
+      if (Array.isArray(payload.chatHistory)) {
+        for (const item of payload.chatHistory) {
+          const role = item.role === 'model' ? 'model' : 'user';
+          const text = item.parts?.[0]?.text || (typeof item.content === 'string' ? item.content : '');
+          if (!text || typeof text !== 'string' || text.trim() === '') continue;
+
+          if (cleanHistory.length === 0 && role === 'model') continue;
+
+          const lastTurn = cleanHistory[cleanHistory.length - 1];
+          if (lastTurn && lastTurn.role === role) {
+            lastTurn.parts[0].text += `\n${text.trim()}`;
+          } else {
+            cleanHistory.push({ role, parts: [{ text: text.trim() }] });
+          }
+        }
+      }
+
       const modelsToTry = ["gemini-2.5-flash", "gemini-flash-latest", "gemini-3.1-flash-lite"];
       let chatRes: string | null = null;
       let lastErr: any = null;
@@ -142,7 +164,7 @@ export async function runAiTask(type: string, payload: any, userId: string): Pro
         try {
           const resp = await gAI.models.generateContent({
             model: modelName,
-            contents: payload.chatHistory || [],
+            contents: cleanHistory.length > 0 ? cleanHistory : [{ role: 'user', parts: [{ text: 'مرحباً' }] }],
             config: {
               systemInstruction: payload.systemInstruction || "أنت المستشار الريادي الذكي لمنصة Business Creator AI.",
               temperature: 0.7,
