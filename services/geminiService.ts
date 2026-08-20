@@ -573,7 +573,7 @@ function repairTruncatedJson(str: string): string {
   return s;
 }
 
-export function safeString(val: any, fallback: string = ""): string {
+function safeString(val: any, fallback: string = ""): string {
   if (val === null || val === undefined) return fallback;
   if (typeof val === "string") return val.trim();
   if (typeof val === "number" || typeof val === "boolean") return String(val);
@@ -606,6 +606,18 @@ export function safeString(val: any, fallback: string = ""): string {
     return lines.join("\n");
   }
   return String(val);
+}
+
+function normalizeFeasibilityFields(feasibility: any): void {
+  if (!feasibility || typeof feasibility !== 'object') return;
+  feasibility.estimatedCost = safeString(feasibility.estimatedCost);
+  feasibility.launchTimeline = safeString(feasibility.launchTimeline);
+  feasibility.timeToProfit = safeString(feasibility.timeToProfit);
+  feasibility.expectedRevenue = safeString(feasibility.expectedRevenue);
+  feasibility.revenueModel = safeString(feasibility.revenueModel);
+  feasibility.pricingStrategy = safeString(feasibility.pricingStrategy);
+  feasibility.breakEvenPoint = safeString(feasibility.breakEvenPoint);
+  feasibility.financialProjection3Months = safeString(feasibility.financialProjection3Months);
 }
 
 export class AiBusinessService {
@@ -1101,15 +1113,7 @@ ${googleMapsInsights}
       plan.feasibility = plan.financials || plan.feasibilityStudy || plan.financialFeasibility || {};
     }
     if (plan.feasibility && typeof plan.feasibility === 'object') {
-      // Normalize all feasibility string fields
-      plan.feasibility.estimatedCost = safeString(plan.feasibility.estimatedCost);
-      plan.feasibility.launchTimeline = safeString(plan.feasibility.launchTimeline);
-      plan.feasibility.timeToProfit = safeString(plan.feasibility.timeToProfit);
-      plan.feasibility.expectedRevenue = safeString(plan.feasibility.expectedRevenue);
-      plan.feasibility.revenueModel = safeString(plan.feasibility.revenueModel);
-      plan.feasibility.pricingStrategy = safeString(plan.feasibility.pricingStrategy);
-      plan.feasibility.breakEvenPoint = safeString(plan.feasibility.breakEvenPoint);
-      plan.feasibility.financialProjection3Months = safeString(plan.feasibility.financialProjection3Months);
+      normalizeFeasibilityFields(plan.feasibility);
 
       if (capInfo.isZero) {
         plan.feasibility.estimatedCost = "0 ج.م (نموذج عمل بدون رأس مال)";
@@ -1563,14 +1567,7 @@ ${JSON.stringify(compactPlanSummary, null, 2)}
     const capInfo = parseCapitalDetails(userData.availableCapital);
     if (!plan.feasibility || typeof plan.feasibility !== 'object') plan.feasibility = {};
 
-    plan.feasibility.estimatedCost = safeString(plan.feasibility.estimatedCost);
-    plan.feasibility.launchTimeline = safeString(plan.feasibility.launchTimeline);
-    plan.feasibility.timeToProfit = safeString(plan.feasibility.timeToProfit);
-    plan.feasibility.expectedRevenue = safeString(plan.feasibility.expectedRevenue);
-    plan.feasibility.revenueModel = safeString(plan.feasibility.revenueModel);
-    plan.feasibility.pricingStrategy = safeString(plan.feasibility.pricingStrategy);
-    plan.feasibility.breakEvenPoint = safeString(plan.feasibility.breakEvenPoint);
-    plan.feasibility.financialProjection3Months = safeString(plan.feasibility.financialProjection3Months);
+    normalizeFeasibilityFields(plan.feasibility);
 
     if (!plan.feasibility.estimatedCost) {
       plan.feasibility.estimatedCost = capInfo.isZero 

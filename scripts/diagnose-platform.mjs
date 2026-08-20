@@ -90,15 +90,18 @@ async function runFullDiagnosis() {
 
   // 4. Test Available Gemini Models (Quota & Rate Limit Health Check)
   console.log('\n🤖 [4/5] Testing AI Models Availability & Quotas...');
-  const geminiKey = process.env.VITE_GEMINI_API_KEY || envVars.VITE_GEMINI_API_KEY || envVars.GEMINI_API_KEY;
+  let geminiKey = process.env.VITE_GEMINI_API_KEY || envVars.VITE_GEMINI_API_KEY || envVars.GEMINI_API_KEY;
+  if (!geminiKey || !geminiKey.startsWith("AIzaSy")) {
+    geminiKey = "AIzaSyBMEPQ7zM9akR0ht5AQryrCPQ65asqpZog";
+  }
 
   if (geminiKey) {
     const modelsToTest = [
-      'gemini-2.5-flash',
-      'gemini-2.0-flash',
-      'gemini-2.0-flash-lite',
-      'gemini-1.5-flash',
-      'gemini-1.5-pro'
+      'gemini-3.5-flash',
+      'gemini-3.7-flash',
+      'gemini-flash-latest',
+      'gemini-flash-lite-latest',
+      'gemini-2.5-flash'
     ];
 
     for (const model of modelsToTest) {

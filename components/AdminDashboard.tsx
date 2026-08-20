@@ -52,6 +52,7 @@ import {
 import { ActivityLog, BusinessPlan, UserProfile } from '../types';
 import { createNotification } from '../services/notificationService';
 import { adminUpgradeUserAccount } from '../services/tempPaymentService';
+import { ErrorTracker } from '../services/errorTracker';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -201,12 +202,22 @@ const AdminDashboard: React.FC = () => {
         .order('timestamp', { ascending: false })
         .limit(500);
 
-      const logs = (logsData || []).map((d: any) => ({
+      const localErrors = ErrorTracker.getLocalErrors().map(err => ({
+        id: err.id || `loc-${err.timestamp}`,
+        action: `[CLIENT LOG] ${err.context}: ${err.errorMessage}`,
+        details: err.metadata || {},
+        timestamp: err.timestamp,
+        userId: err.userId || 'client',
+        userName: 'Client Runtime',
+        userEmail: err.userEmail || 'telemetry@local',
+      } as ActivityLog));
+
+      const logs = [...localErrors, ...(logsData || []).map((d: any) => ({
         ...d,
         userId: d.user_id,
         userName: d.user_name,
         userEmail: d.user_email,
-      } as ActivityLog)).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      } as ActivityLog))].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
       // 5. Fetch Feedbacks
       const { data: feedbacksData } = await supabase.from('feedbacks').select('*');
