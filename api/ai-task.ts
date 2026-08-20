@@ -140,35 +140,10 @@ export default async function handler(req: Request, res: Response) {
       const logoService = new LogoService();
       result = await logoService.generateLogoSystem(prompt, projectName, idea, styleDesc);
     } else if (type === 'chat_message') {
-      const { systemInstruction: clientInstruction, chatHistory: rawChatHistory } = payload || {};
+      const { systemInstruction: clientInstruction, chatHistory } = payload || {};
       
-      let key = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || "AIzaSyBMEPQ7zM9akR0ht5AQryrCPQ65asqpZog";
+      let key = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
       const gAI = new GoogleGenAI(key ? { apiKey: key } : {});
-
-      // Sanitize chat history: merge consecutive turns and ensure it starts with user
-      const cleanHistory: any[] = [];
-      if (Array.isArray(rawChatHistory)) {
-        for (const item of rawChatHistory) {
-          const role = item.role === 'model' ? 'model' : 'user';
-          const text = item.parts?.[0]?.text || (typeof item.content === 'string' ? item.content : '');
-          if (!text || typeof text !== 'string' || text.trim() === '') continue;
-
-          if (cleanHistory.length === 0 && role === 'model') {
-            // First turn in Gemini conversation must be user
-            continue;
-          }
-
-          const lastTurn = cleanHistory[cleanHistory.length - 1];
-          if (lastTurn && lastTurn.role === role) {
-            lastTurn.parts[0].text += `\n${text.trim()}`;
-          } else {
-            cleanHistory.push({
-              role,
-              parts: [{ text: text.trim() }]
-            });
-          }
-        }
-      }
 
       const modelsToTry = ["gemini-2.5-flash", "gemini-flash-latest", "gemini-3.1-flash-lite"];
       let lastChatError = null;
@@ -180,21 +155,14 @@ export default async function handler(req: Request, res: Response) {
 
       for (const modelName of modelsToTry) {
         try {
-          const generatePromise = gAI.models.generateContent({
+          const response = await gAI.models.generateContent({
             model: modelName,
-            contents: cleanHistory.length > 0 ? cleanHistory : [{ role: 'user', parts: [{ text: 'مرحباً' }] }],
+            contents: chatHistory || [],
             config: {
               systemInstruction: safeSystemInstruction,
               temperature: 0.7,
             }
           });
-
-          // 12-second timeout per model
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error(`Timeout on model ${modelName}`)), 12000)
-          );
-
-          const response: any = await Promise.race([generatePromise, timeoutPromise]);
 
           if (response && response.text) {
             chatRes = response.text;
@@ -207,7 +175,7 @@ export default async function handler(req: Request, res: Response) {
       }
 
       if (!chatRes) {
-        throw new Error(`تعذر الحصول على استجابة من المستشار الذكي: ${lastChatError?.message || 'يرجى إعادة المحاولة'}`);
+        throw new Error(`تعذر الحصول على استجابة من المستشار الذكي: ${lastChatError?.message || 'خطأ غير معروف'}`);
       }
 
       result = chatRes;
