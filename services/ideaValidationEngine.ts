@@ -441,7 +441,7 @@ ${failureGates && failureGates.length > 0 ? `- أسباب فشل الفكرة ا
     for (const modelName of modelsToTry) {
       try {
         console.log(`[IdeaValidationEngine] Calling Gemini model ${modelName} for custom alternative ideas...`);
-        const response = await ai.models.generateContent({
+        const response = await createGeminiClient().models.generateContent({
           model: modelName,
           contents: prompt,
           config: {

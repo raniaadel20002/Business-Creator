@@ -4,6 +4,9 @@ const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (typeof globalThis !== 'undefined') {
+  (globalThis as any).__bc_supabase = supabase;
+}
 
 // ---- Auth helpers ----
 
@@ -173,18 +176,33 @@ export async function runAiTask(type: string, payload: any, userId: string): Pro
     
     // Telemetry capture
     try {
-      const { ErrorTracker } = await import('./services/errorTracker');
-      ErrorTracker.captureError({
-        source: 'ai_engine',
-        context: `runAiTask:${type}`,
-        errorMessage: directErr?.message || String(directErr),
-        stackTrace: directErr?.stack,
-        userId: userId || 'anonymous',
-        metadata: {
-          taskType: type,
-          payloadSummary: typeof payload === 'object' ? Object.keys(payload || {}) : typeof payload
-        }
-      });
+      if (typeof globalThis !== 'undefined' && (globalThis as any).__bc_errorTracker) {
+        (globalThis as any).__bc_errorTracker.captureError({
+          source: 'ai_engine',
+          context: `runAiTask:${type}`,
+          errorMessage: directErr?.message || String(directErr),
+          stackTrace: directErr?.stack,
+          userId: userId || 'anonymous',
+          metadata: {
+            taskType: type,
+            payloadSummary: typeof payload === 'object' ? Object.keys(payload || {}) : typeof payload
+          }
+        });
+      } else if (supabase) {
+        await supabase.from('logs').insert({
+          user_id: userId || 'anonymous',
+          user_name: 'Telemetry Monitor',
+          user_email: 'telemetry@businesscreator.ai',
+          action: `[ERROR] runAiTask:${type}: ${(directErr?.message || String(directErr)).slice(0, 150)}`,
+          details: {
+            source: 'ai_engine',
+            context: `runAiTask:${type}`,
+            errorMessage: directErr?.message || String(directErr),
+            stackTrace: directErr?.stack
+          },
+          timestamp: new Date().toISOString()
+        });
+      }
     } catch (tErr) {}
 
     // Attempt 3: Record backup task in Supabase DB

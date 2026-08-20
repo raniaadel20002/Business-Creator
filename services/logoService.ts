@@ -2,10 +2,12 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { createGeminiClient, getModelFallbackList } from "./geminiClient.js";
 
 export class LogoService {
-  private ai: GoogleGenAI;
+  private get ai(): GoogleGenAI {
+    return createGeminiClient();
+  }
 
   constructor() {
-    this.ai = createGeminiClient();
+    // Dynamic key pool getter
   }
 
   private sanitizeStructuredConfig(config: any): any {

@@ -2,7 +2,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { UserData, BusinessPlan } from "../types.js";
 import { IdeaValidationEngine } from "./ideaValidationEngine.js";
 import { buildPlanPrompt, getUserMandatesPrompt, parseCapitalDetails, STAGE_1_AND_2_COMBINED_PROMPT, STAGE_3_BLUEPRINT_EXECUTION_PROMPT, BUSINESS_CREATOR_CORE_ENGINE_INSTRUCTION } from "./prompts/projectPrompts.js";
-import { createGeminiClient, getModelFallbackList } from "./geminiClient.js";
+import { createGeminiClient, getModelFallbackList, executeWithGeminiPool, geminiKeyPool } from "./geminiClient.js";
 
 const maxDuration = 60;
 
@@ -609,14 +609,16 @@ export function safeString(val: any, fallback: string = ""): string {
 }
 
 export class AiBusinessService {
-  private ai: GoogleGenAI;
+  private get ai(): GoogleGenAI {
+    return createGeminiClient();
+  }
 
   // In-memory cache map for Search & Maps grounding results with 6-hour TTL
   private static searchCache = new Map<string, { data: string; timestamp: number }>();
   private static readonly CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
   constructor() {
-    this.ai = createGeminiClient();
+    // Initialized with dynamic key pool getter
   }
 
   // Helper to handle timeouts elegantly
@@ -940,96 +942,100 @@ ${googleMapsInsights}
     contents: any;
     config?: any;
   }): Promise<any> {
-    const modelsToTry = getModelFallbackList(params.model);
-    let lastError: any = null;
+    return await executeWithGeminiPool(async (client) => {
+      const modelsToTry = getModelFallbackList(params.model);
+      let lastError: any = null;
 
-    for (const modelName of modelsToTry) {
-      let activeConfig = params.config ? { ...params.config } : {};
-      try {
-        console.log(`[Gemini SDK] Attempting generation with model: ${modelName}`);
-        
-        // Strip tools if structured JSON output/schema is requested to prevent 400 Bad Request
-        if ((activeConfig.tools || activeConfig.toolConfig) && (activeConfig.responseMimeType === "application/json" || activeConfig.responseSchema)) {
-          console.log(`[Gemini SDK] Stripping tools from ${modelName} to avoid structured JSON conflicts`);
-          delete activeConfig.tools;
-          delete activeConfig.toolConfig;
-        }
+      for (const modelName of modelsToTry) {
+        let activeConfig = params.config ? { ...params.config } : {};
+        try {
+          console.log(`[Gemini SDK] Attempting generation with model: ${modelName}`);
+          
+          // Strip tools if structured JSON output/schema is requested to prevent 400 Bad Request
+          if ((activeConfig.tools || activeConfig.toolConfig) && (activeConfig.responseMimeType === "application/json" || activeConfig.responseSchema)) {
+            console.log(`[Gemini SDK] Stripping tools from ${modelName} to avoid structured JSON conflicts`);
+            delete activeConfig.tools;
+            delete activeConfig.toolConfig;
+          }
 
-        const response = await this.ai.models.generateContent({
-          ...params,
-          model: modelName,
-          config: activeConfig
-        });
+          const response = await client.models.generateContent({
+            ...params,
+            model: modelName,
+            config: activeConfig
+          });
 
-        const textValue = response.text ? response.text.trim() : "";
-        if (textValue.startsWith("<!doctype") || textValue.startsWith("<html") || textValue.toLowerCase().startsWith("<html")) {
-          throw new Error("Invalid response from server: Expected JSON but received HTML");
-        }
+          const textValue = response.text ? response.text.trim() : "";
+          if (textValue.startsWith("<!doctype") || textValue.startsWith("<html") || textValue.toLowerCase().startsWith("<html")) {
+            throw new Error("Invalid response from server: Expected JSON but received HTML");
+          }
 
-        console.log(`[Gemini SDK] Successfully processed using model: ${modelName}`);
-        return response;
-      } catch (error: any) {
-        lastError = error;
-        const errStr = typeof error === 'object' ? JSON.stringify(error) : String(error);
+          console.log(`[Gemini SDK] Successfully processed using model: ${modelName}`);
+          return response;
+        } catch (error: any) {
+          lastError = error;
+          const errStr = typeof error === 'object' ? JSON.stringify(error) : String(error);
 
-        // 1. If tools (like Google Search) caused 429 or failure, retry immediately without tools
-        if (activeConfig.tools || activeConfig.toolConfig) {
-          console.warn(`[Gemini SDK] Tool grounding hit quota or error on ${modelName}, retrying WITHOUT tools immediately...`);
-          try {
-            const configWithoutTools = { ...activeConfig };
-            delete configWithoutTools.tools;
-            delete configWithoutTools.toolConfig;
-            const response = await this.ai.models.generateContent({
-              ...params,
-              model: modelName,
-              config: configWithoutTools
-            });
+          // If quota / 429 error occurs, rethrow so pool immediately switches key and retries this exact step
+          if (geminiKeyPool.isQuotaError(error)) {
+            throw error;
+          }
 
-            const textValue = response.text ? response.text.trim() : "";
-            if (textValue && !textValue.startsWith("<!doctype") && !textValue.toLowerCase().startsWith("<html")) {
-              console.log(`[Gemini SDK] Successfully processed model ${modelName} after stripping tools`);
+          // 1. If tools (like Google Search) caused error, retry immediately without tools
+          if (activeConfig.tools || activeConfig.toolConfig) {
+            console.warn(`[Gemini SDK] Tool grounding error on ${modelName}, retrying WITHOUT tools immediately...`);
+            try {
+              const configWithoutTools = { ...activeConfig };
+              delete configWithoutTools.tools;
+              delete configWithoutTools.toolConfig;
+              const response = await client.models.generateContent({
+                ...params,
+                model: modelName,
+                config: configWithoutTools
+              });
+
+              const textValue = response.text ? response.text.trim() : "";
+              if (textValue && !textValue.startsWith("<!doctype") && !textValue.toLowerCase().startsWith("<html")) {
+                console.log(`[Gemini SDK] Successfully processed model ${modelName} after stripping tools`);
+                return response;
+              }
+            } catch (tErr: any) {
+              if (geminiKeyPool.isQuotaError(tErr)) throw tErr;
+              lastError = tErr;
+            }
+          }
+
+          // 2. If schema complexity caused 400, retry immediately without responseSchema
+          if (errStr.includes("too many states") || errStr.includes("constraint") || errStr.includes("400") || errStr.includes("INVALID_ARGUMENT")) {
+            console.warn(`[Gemini SDK] Model ${modelName} failed due to schema complexity. Retrying WITHOUT responseSchema...`);
+            try {
+              const configWithoutSchema = { ...activeConfig };
+              delete configWithoutSchema.responseSchema;
+              
+              const response = await client.models.generateContent({
+                ...params,
+                model: modelName,
+                config: configWithoutSchema
+              });
+
+              const textValue = response.text ? response.text.trim() : "";
+              if (textValue.startsWith("<!doctype") || textValue.startsWith("<html") || textValue.toLowerCase().startsWith("<html")) {
+                throw new Error("Invalid response from server: Expected JSON but received HTML");
+              }
+
+              console.log(`[Gemini SDK] Successfully processed model ${modelName} after stripping responseSchema`);
               return response;
+            } catch (retryError: any) {
+              if (geminiKeyPool.isQuotaError(retryError)) throw retryError;
+              lastError = retryError;
             }
-          } catch (tErr: any) {
-            lastError = tErr;
           }
-        }
 
-        // 2. If schema complexity caused 400, retry immediately without responseSchema
-        if (errStr.includes("too many states") || errStr.includes("constraint") || errStr.includes("400") || errStr.includes("INVALID_ARGUMENT")) {
-          console.warn(`[Gemini SDK] Model ${modelName} failed due to schema complexity. Retrying WITHOUT responseSchema...`);
-          try {
-            const configWithoutSchema = { ...activeConfig };
-            delete configWithoutSchema.responseSchema;
-            
-            const response = await this.ai.models.generateContent({
-              ...params,
-              model: modelName,
-              config: configWithoutSchema
-            });
-
-            const textValue = response.text ? response.text.trim() : "";
-            if (textValue.startsWith("<!doctype") || textValue.startsWith("<html") || textValue.toLowerCase().startsWith("<html")) {
-              throw new Error("Invalid response from server: Expected JSON but received HTML");
-            }
-
-            console.log(`[Gemini SDK] Successfully processed model ${modelName} after stripping responseSchema`);
-            return response;
-          } catch (retryError: any) {
-            lastError = retryError;
-          }
-        }
-
-        if (errStr.includes("429") || errStr.includes("RESOURCE_EXHAUSTED") || errStr.toLowerCase().includes("quota")) {
-          console.warn(`[Gemini SDK] Rate limit hit on ${modelName}, immediately switching to next model...`);
-          await new Promise(resolve => setTimeout(resolve, 500));
-        } else {
           await new Promise(resolve => setTimeout(resolve, 300));
         }
       }
-    }
 
-    throw lastError || new Error("All fallback models and configurations failed.");
+      throw lastError || new Error("All fallback models and configurations failed.");
+    });
   }
 
   private async verifyBusinessPlanProgrammatically(

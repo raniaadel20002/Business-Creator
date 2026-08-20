@@ -1,5 +1,3 @@
-import { supabase } from '../supabase';
-
 export interface SystemErrorEvent {
   id?: string;
   timestamp: string;
@@ -48,6 +46,10 @@ export class ErrorTracker {
       });
     });
 
+    if (typeof globalThis !== 'undefined') {
+      (globalThis as any).__bc_errorTracker = ErrorTracker;
+    }
+
     console.log('[ErrorTracker] Global telemetry listener active.');
   }
 
@@ -84,8 +86,9 @@ export class ErrorTracker {
 
     // 4. Send to Supabase logs table silently for remote inspection
     try {
-      if (supabase) {
-        await supabase.from('logs').insert({
+      const client = (typeof globalThis !== 'undefined' ? (globalThis as any).__bc_supabase : null);
+      if (client) {
+        await client.from('logs').insert({
           user_id: event.userId || 'system',
           user_name: 'Telemetry Monitor',
           user_email: event.userEmail || 'telemetry@businesscreator.ai',

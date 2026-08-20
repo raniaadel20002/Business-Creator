@@ -1,21 +1,6 @@
-import fs from 'fs';
-import path from 'path';
+import { loadEnv } from './load-env.mjs';
 
-const envPath = path.resolve(process.cwd(), '.env');
-const envVars = {};
-if (fs.existsSync(envPath)) {
-  const lines = fs.readFileSync(envPath, 'utf8').split('\n');
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) continue;
-    const eqIdx = trimmed.indexOf('=');
-    if (eqIdx !== -1) {
-      const key = trimmed.slice(0, eqIdx).trim();
-      const val = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, '');
-      envVars[key] = val;
-    }
-  }
-}
+const envVars = loadEnv();
 
 const geminiKey = process.env.VITE_GEMINI_API_KEY || envVars.VITE_GEMINI_API_KEY || envVars.GEMINI_API_KEY || "AIzaSyBMEPQ7zM9akR0ht5AQryrCPQ65asqpZog";
 

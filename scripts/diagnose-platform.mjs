@@ -1,23 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
-import fs from 'fs';
-import path from 'path';
+import { loadEnv } from './load-env.mjs';
 
-// Parse .env if exists
-const envPath = path.resolve(process.cwd(), '.env');
-const envVars = {};
-if (fs.existsSync(envPath)) {
-  const lines = fs.readFileSync(envPath, 'utf8').split('\n');
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) continue;
-    const eqIdx = trimmed.indexOf('=');
-    if (eqIdx !== -1) {
-      const key = trimmed.slice(0, eqIdx).trim();
-      const val = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, '');
-      envVars[key] = val;
-    }
-  }
-}
+const envVars = loadEnv();
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || envVars.VITE_SUPABASE_URL || envVars.SUPABASE_URL || 'https://yeuivdauozcqwyraaztx.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || envVars.SUPABASE_SERVICE_ROLE_KEY || envVars.VITE_SUPABASE_ANON_KEY || 'sb_publishable_UKM5RbPgMjVitDc5D3wk0Q_pqyxsYla';

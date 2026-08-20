@@ -72,4 +72,3 @@ export const InsufficientTokensCard: React.FC<InsufficientTokensCardProps> = ({
   );
 };
 
-export default InsufficientTokensCard;
