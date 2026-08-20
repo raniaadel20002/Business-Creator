@@ -1,8 +1,11 @@
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { AuthProvider } from './components/AuthContext';
+import { ErrorTracker } from './services/errorTracker';
+
+// Initialize global real-time error telemetry
+ErrorTracker.initGlobalHandlers();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

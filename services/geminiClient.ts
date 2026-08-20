@@ -35,11 +35,12 @@ export function createGeminiClient(): GoogleGenAI {
 }
 
 const FALLBACK_GEMINI_MODELS = [
+  "gemini-3.5-flash",
+  "gemini-flash-latest",
+  "gemini-3.7-flash",
+  "gemini-flash-lite-latest",
+  "gemini-3.1-flash-lite",
   "gemini-2.5-flash",
-  "gemini-2.0-flash",
-  "gemini-1.5-flash",
-  "gemini-2.5-pro",
-  "gemini-1.5-pro"
 ];
 
 export function getModelFallbackList(primaryModel?: string): string[] {

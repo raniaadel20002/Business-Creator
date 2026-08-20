@@ -8,7 +8,8 @@
     "build": "vite build",
     "start": "tsx server.ts",
     "preview": "vite preview",
-    "lint": "tsc"
+    "lint": "tsc",
+    "telemetry": "node scripts/inspect-telemetry.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.40.0",

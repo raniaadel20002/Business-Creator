@@ -745,7 +745,9 @@ const AdvisorChat: React.FC<AdvisorChatProps> = ({ profile, plan, onClose, onUpg
 
       setStreamingContent('');
       
-      const chatHistory = newMessages
+      // Keep chat history bounded to the most recent 16 messages to prevent token waste and latency bloat
+      const boundedMessages = newMessages.length > 16 ? newMessages.slice(-16) : newMessages;
+      const chatHistory = boundedMessages
         .filter((m, i) => !(i === 0 && m.role === 'model'))
         .map(m => ({
           role: m.role === 'model' ? 'model' : 'user',
@@ -757,7 +759,11 @@ const AdvisorChat: React.FC<AdvisorChatProps> = ({ profile, plan, onClose, onUpg
         console.log("Chat response generation aborted by user.");
         return;
       }
-      const fullResponse = res.text || '';
+      const fullResponse = typeof res === 'string' ? res : (res?.text || res?.result || res?.content || res?.message || '');
+
+      if (!fullResponse || !fullResponse.trim()) {
+        throw new Error("لم يتم تلقي رد صالح من المستشار الذكي.");
+      }
 
       const aiMessage: ChatMessage = {
         role: 'model',

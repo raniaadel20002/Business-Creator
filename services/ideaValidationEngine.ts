@@ -439,7 +439,7 @@ ${failureGates && failureGates.length > 0 ? `- أسباب فشل الفكرة ا
     try {
       console.log("[IdeaValidationEngine] Calling Gemini to generate custom alternative ideas...");
       const response = await ai.models.generateContent({
-        model: "gemini-3.6-flash",
+        model: "gemini-2.5-flash",
         contents: prompt,
         config: {
           systemInstruction: "أنت مستشار مبتكر في مجال الأعمال متخصص في السوق المصري. أخرج حصرياً مصفوفة JSON صالحة مطابقة لهيكل الاستجابة المطلوب. يجب كتابة جميع النصوص داخل حقول JSON (projectName, concept, rationale) بالكامل باللهجة المصرية العامية باستخدام مصطلحات تجارية بسيطة وواضحة وشائعة وخالية من المصطلحات المعقدة. لا تكتب أي غلاف ماركداون أو نصوص شارحة خارج JSON.",

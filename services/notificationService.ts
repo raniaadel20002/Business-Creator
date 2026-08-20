@@ -66,16 +66,28 @@ export const createNotification = async (
 
   // 2. Insert into Supabase table
   try {
-    const { error } = await supabase.from('notifications').insert({
+    const basePayload: any = {
       user_id: userId,
       title,
       message,
       type: type || 'info',
-      suggest_whats_app: Boolean(suggestWhatsApp),
       read: false,
       is_official: Boolean(isOfficial),
       created_at: timestamp,
-    });
+    };
+
+    if (suggestWhatsApp) {
+      basePayload.suggest_whats_app = true;
+    }
+
+    let { error } = await supabase.from('notifications').insert(basePayload);
+
+    // If failed because column doesn't exist in Supabase schema cache, retry without that field
+    if (error && (error.message?.includes('suggest_whats_app') || error.code === 'PGRST204')) {
+      delete basePayload.suggest_whats_app;
+      const retry = await supabase.from('notifications').insert(basePayload);
+      error = retry.error;
+    }
 
     if (error) {
       console.warn("Supabase notification insert warning (saved in local store):", error.message);

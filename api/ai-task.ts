@@ -109,7 +109,7 @@ export default async function handler(req: Request, res: Response) {
       let key = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
       const gAI = new GoogleGenAI(key ? { apiKey: key } : {});
 
-      const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+      const modelsToTry = ["gemini-3.5-flash", "gemini-flash-latest", "gemini-3.7-flash", "gemini-flash-lite-latest", "gemini-3.1-flash-lite", "gemini-2.5-flash"];
       let lastChatError = null;
       let chatRes = null;
 

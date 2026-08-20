@@ -21,16 +21,16 @@ export const InsufficientTokensCard: React.FC<InsufficientTokensCardProps> = ({
   compact = false,
 }) => {
   return (
-    <div 
-      dir="rtl" 
+    <div
+      dir="rtl"
       className={`w-full bg-gradient-to-br from-orange-50/90 via-white to-amber-50/50 border-2 border-orange-200/90 rounded-3xl p-5 md:p-6 shadow-xl shadow-orange-500/5 text-right space-y-4 animate-in fade-in zoom-in-95 duration-300 ${className}`}
     >
       {/* Brand Header */}
       <div className="flex items-center gap-3 border-b border-orange-100/90 pb-3.5">
         <div className="w-10 h-10 rounded-2xl bg-white border border-orange-200 flex items-center justify-center p-1.5 shrink-0 shadow-sm relative overflow-visible">
-          <img 
-            src="/logoo.png" 
-            alt="Business Creator" 
+          <img
+            src="/logoo.png"
+            alt="Business Creator"
             className="w-full h-full object-contain"
             onError={(e) => {
               (e.currentTarget as HTMLElement).style.display = 'none';

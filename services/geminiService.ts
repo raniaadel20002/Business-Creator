@@ -573,6 +573,41 @@ function repairTruncatedJson(str: string): string {
   return s;
 }
 
+export function safeString(val: any, fallback: string = ""): string {
+  if (val === null || val === undefined) return fallback;
+  if (typeof val === "string") return val.trim();
+  if (typeof val === "number" || typeof val === "boolean") return String(val);
+  if (Array.isArray(val)) {
+    const parts = val.map(item => {
+      if (typeof item === "string") return item;
+      if (typeof item === "object" && item !== null) {
+        if (item.month || item.period) {
+          const sub: string[] = [];
+          if (item.month || item.period) sub.push(String(item.month || item.period));
+          if (item.revenue || item.income) sub.push(`إيرادات: ${item.revenue || item.income}`);
+          if (item.expenses || item.cost) sub.push(`مصاريف: ${item.expenses || item.cost}`);
+          if (item.netProfit || item.profit) sub.push(`صافي ربح: ${item.netProfit || item.profit}`);
+          if (item.details || item.notes) sub.push(String(item.details || item.notes));
+          return sub.length > 0 ? sub.join(" - ") : JSON.stringify(item);
+        }
+        return Object.entries(item).map(([k, v]) => `${k}: ${v}`).join(" | ");
+      }
+      return String(item);
+    });
+    return parts.filter(Boolean).join("\n");
+  }
+  if (typeof val === "object") {
+    const lines = Object.entries(val).map(([k, v]) => {
+      if (typeof v === "object" && v !== null) {
+        return `${k}: ${JSON.stringify(v)}`;
+      }
+      return `${k}: ${v}`;
+    });
+    return lines.join("\n");
+  }
+  return String(val);
+}
+
 export class AiBusinessService {
   private ai: GoogleGenAI;
 
@@ -693,7 +728,7 @@ export class AiBusinessService {
 4. أهم متطلبات التراخيص والخطوات القانونية اللازمة لهذا النشاط تحديداً لدى الجهات الرسمية.`;
 
       const response = await this.generateContentWithFallback({
-        model: "gemini-3.6-flash",
+        model: "gemini-2.5-flash",
         contents: searchPrompt,
         config: {
           systemInstruction: `أنت خبير أبحاث تسويقية واقتصادية في ${targetLocation}. مهمتك هي البحث الفعلي عبر جوجل لجلب بيانات أسعار حقيقية ومنافسين فعليين لعام 2026.`,
@@ -733,7 +768,7 @@ export class AiBusinessService {
 3. التوصيات المكانية الأفضل لتقليل تكلفة الإيجار والمقر وتفادي المنافسة المباشرة في ${targetCity}.`;
 
       const response = await this.generateContentWithFallback({
-        model: "gemini-3.6-flash",
+        model: "gemini-2.5-flash",
         contents: mapsPrompt,
         config: {
           systemInstruction: `أنت محلل جغرافي متخصص في الأنشطة التجارية في ${targetLocation}. مهمتك هي البحث ورصد المنافسين والمناطق الحيوية في ${targetCity}.`,
@@ -770,7 +805,7 @@ ${googleMapsInsights}
 
     try {
       const response = await this.generateContentWithFallback({
-        model: "gemini-3.6-flash",
+        model: "gemini-2.5-flash",
         contents: prompt,
         config: {
           systemInstruction: STAGE_1_AND_2_COMBINED_PROMPT.replace('${availableCapital}', availableCapital),
@@ -846,7 +881,7 @@ ${googleMapsInsights}
     }
 
     const response = await this.generateContentWithFallback({
-      model: "gemini-3.6-flash",
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION + "\n\n" + STAGE_3_BLUEPRINT_EXECUTION_PROMPT,
@@ -936,12 +971,31 @@ ${googleMapsInsights}
       } catch (error: any) {
         lastError = error;
         const errStr = typeof error === 'object' ? JSON.stringify(error) : String(error);
-        
-        if (errStr.includes("429") || errStr.includes("RESOURCE_EXHAUSTED") || errStr.toLowerCase().includes("quota")) {
-          console.warn(`[Gemini SDK] Rate limit or quota hit on ${modelName}, waiting 2000ms before retrying or switching models...`);
-          await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // 1. If tools (like Google Search) caused 429 or failure, retry immediately without tools
+        if (activeConfig.tools || activeConfig.toolConfig) {
+          console.warn(`[Gemini SDK] Tool grounding hit quota or error on ${modelName}, retrying WITHOUT tools immediately...`);
+          try {
+            const configWithoutTools = { ...activeConfig };
+            delete configWithoutTools.tools;
+            delete configWithoutTools.toolConfig;
+            const response = await this.ai.models.generateContent({
+              ...params,
+              model: modelName,
+              config: configWithoutTools
+            });
+
+            const textValue = response.text ? response.text.trim() : "";
+            if (textValue && !textValue.startsWith("<!doctype") && !textValue.toLowerCase().startsWith("<html")) {
+              console.log(`[Gemini SDK] Successfully processed model ${modelName} after stripping tools`);
+              return response;
+            }
+          } catch (tErr: any) {
+            lastError = tErr;
+          }
         }
 
+        // 2. If schema complexity caused 400, retry immediately without responseSchema
         if (errStr.includes("too many states") || errStr.includes("constraint") || errStr.includes("400") || errStr.includes("INVALID_ARGUMENT")) {
           console.warn(`[Gemini SDK] Model ${modelName} failed due to schema complexity. Retrying WITHOUT responseSchema...`);
           try {
@@ -965,7 +1019,13 @@ ${googleMapsInsights}
             lastError = retryError;
           }
         }
-        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        if (errStr.includes("429") || errStr.includes("RESOURCE_EXHAUSTED") || errStr.toLowerCase().includes("quota")) {
+          console.warn(`[Gemini SDK] Rate limit hit on ${modelName}, immediately switching to next model...`);
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } else {
+          await new Promise(resolve => setTimeout(resolve, 300));
+        }
       }
     }
 
@@ -979,14 +1039,20 @@ ${googleMapsInsights}
     const issues: string[] = [];
     const suggestions: string[] = [];
 
+    // Ensure plan is an object
+    if (!plan || typeof plan !== 'object') {
+      return { isValid: false, issues: ["الخطة فارغة أو بتنسيق غير صالح."], suggestions: [] };
+    }
+
     // 1. Project name validation
-    if (!plan.projectName || plan.projectName.trim() === "" || plan.projectName.includes("مشروعي الريادي")) {
+    plan.projectName = safeString(plan.projectName);
+    if (!plan.projectName || plan.projectName.includes("مشروعي الريادي")) {
       issues.push("اسم المشروع مفقود أو غير مبتكر.");
       suggestions.push("يرجى تسمية المشروع باسم علامة تجارية مبتكر ومستقل.");
     }
     const personalNameWords = (userData.fullName || "").split(" ").filter(w => w.length > 2);
     for (const word of personalNameWords) {
-      if (plan.projectName?.toLowerCase().includes(word.toLowerCase())) {
+      if (plan.projectName && plan.projectName.toLowerCase().includes(word.toLowerCase())) {
         issues.push("اسم المشروع يحتوي على الاسم الشخصي للمستخدم.");
         suggestions.push("تجنب استخدام الاسم الشخصي أو العائلي للمستخدم في العلامة التجارية ليكون براند تجاري حقيقي.");
         break;
@@ -995,7 +1061,8 @@ ${googleMapsInsights}
 
     // 2. Budget constraint check
     const capInfo = parseCapitalDetails(userData.availableCapital);
-    const conceptLower = (plan.concept || "").toLowerCase();
+    plan.concept = safeString(plan.concept);
+    const conceptLower = plan.concept.toLowerCase();
 
     if (capInfo.isZero) {
       if (conceptLower.includes("محل") || conceptLower.includes("إيجار") || conceptLower.includes("ورشة") || conceptLower.includes("مصنع") || conceptLower.includes("معدات ثقيلة") || conceptLower.includes("أجهزة مكلفة") || conceptLower.includes("شراء بضاعة")) {
@@ -1010,28 +1077,39 @@ ${googleMapsInsights}
     }
 
     // 3. Competitor URL validation & de-duplication
-    if (plan.validation?.competitorsDetailed) {
+    if (plan.validation?.competitorsDetailed && Array.isArray(plan.validation.competitorsDetailed)) {
       const urlsSeen = new Set<string>();
       plan.validation.competitorsDetailed = plan.validation.competitorsDetailed.map((comp: any) => {
-        let url = comp.url || "";
+        if (!comp || typeof comp !== 'object') return { name: "منافس محلي", url: "https://www.yellowpages.com.eg" };
+        let url = safeString(comp.url);
         if (url.includes("example.com") || url.includes("dummy.com") || url.includes("facebook.com/example") || url === "" || urlsSeen.has(url)) {
           url = `https://www.yellowpages.com.eg/ar/search/${encodeURIComponent(comp.name || "companies")}`;
         }
         urlsSeen.add(url);
-        return { ...comp, url };
+        return { ...comp, url, name: safeString(comp.name, "منافس محلي") };
       });
     }
 
     // 4. Mathematical and Financial outputs sanity check & reconciliation
-    if (!plan.feasibility) {
+    if (!plan.feasibility || typeof plan.feasibility !== 'object') {
       plan.feasibility = plan.financials || plan.feasibilityStudy || plan.financialFeasibility || {};
     }
-    if (plan.feasibility) {
+    if (plan.feasibility && typeof plan.feasibility === 'object') {
+      // Normalize all feasibility string fields
+      plan.feasibility.estimatedCost = safeString(plan.feasibility.estimatedCost);
+      plan.feasibility.launchTimeline = safeString(plan.feasibility.launchTimeline);
+      plan.feasibility.timeToProfit = safeString(plan.feasibility.timeToProfit);
+      plan.feasibility.expectedRevenue = safeString(plan.feasibility.expectedRevenue);
+      plan.feasibility.revenueModel = safeString(plan.feasibility.revenueModel);
+      plan.feasibility.pricingStrategy = safeString(plan.feasibility.pricingStrategy);
+      plan.feasibility.breakEvenPoint = safeString(plan.feasibility.breakEvenPoint);
+      plan.feasibility.financialProjection3Months = safeString(plan.feasibility.financialProjection3Months);
+
       if (capInfo.isZero) {
         plan.feasibility.estimatedCost = "0 ج.م (نموذج عمل بدون رأس مال)";
-        if (plan.feasibility.costBreakdown && plan.feasibility.costBreakdown.length > 0) {
+        if (Array.isArray(plan.feasibility.costBreakdown) && plan.feasibility.costBreakdown.length > 0) {
           plan.feasibility.costBreakdown = plan.feasibility.costBreakdown.map((item: any) => ({
-            item: item.item || "بند تشغيلي",
+            item: safeString(item?.item, "بند تشغيلي"),
             cost: "0 ج.م (أدوات مجانية / بدون تكلفة نقدية)"
           }));
         } else {
@@ -1041,12 +1119,12 @@ ${googleMapsInsights}
             { item: "التشغيل والتوريد بنظام الطلب المسبق (Pre-Order) الممول من العميل", cost: "0 ج.م (تمويل ذاتي فوري)" }
           ];
         }
-        if (!plan.feasibility.breakEvenPoint || plan.feasibility.breakEvenPoint.trim() === "") {
+        if (!plan.feasibility.breakEvenPoint) {
           plan.feasibility.breakEvenPoint = "تحقيق الربح الفوري الصافي من أول طلب أو أول خدمة منفذة لعدم وجود مصاريف تأسيسية ثابتة.";
         }
       } else {
         // Non-zero capital: Strict mathematical coupling & budget bounding
-        const estMatch = (plan.feasibility.estimatedCost || "").replace(/,/g, "").match(/\d+/);
+        const estMatch = plan.feasibility.estimatedCost.replace(/,/g, "").match(/\d+/);
         let estNum = estMatch ? parseInt(estMatch[0], 10) : capInfo.representativeAmount;
 
         // Clamp to user's maximum capital bounds
@@ -1056,14 +1134,14 @@ ${googleMapsInsights}
         }
 
         // Validate and reconcile cost breakdown items
-        if (plan.feasibility.costBreakdown && plan.feasibility.costBreakdown.length > 0) {
+        if (Array.isArray(plan.feasibility.costBreakdown) && plan.feasibility.costBreakdown.length > 0) {
           let sumBreakdown = 0;
           const parsedItems: { item: string; costNum: number }[] = [];
           for (const bItem of plan.feasibility.costBreakdown) {
-            const match = (bItem.cost || "").replace(/,/g, "").match(/\d+/);
+            const match = safeString(bItem?.cost).replace(/,/g, "").match(/\d+/);
             const val = match ? parseInt(match[0], 10) : 0;
             sumBreakdown += val;
-            parsedItems.push({ item: bItem.item || "بند تأسيسي", costNum: val });
+            parsedItems.push({ item: safeString(bItem?.item, "بند تأسيسي"), costNum: val });
           }
 
           // If there is any discrepancy between items sum and total estimated cost
@@ -1093,13 +1171,13 @@ ${googleMapsInsights}
           plan.feasibility.estimatedCost = `${estNum.toLocaleString()} ج.م`;
         }
 
-        if (!plan.feasibility.breakEvenPoint || plan.feasibility.breakEvenPoint.trim() === "") {
+        if (!plan.feasibility.breakEvenPoint) {
           const targetUnits = Math.max(10, Math.round(estNum * 0.05));
           plan.feasibility.breakEvenPoint = `تحقيق التعادل شهرياً ببيع ${targetUnits} وحدة/خدمة لتغطية المصروفات التشغيلية الثابتة.`;
         }
       }
 
-      if (!plan.feasibility.financialProjection3Months || plan.feasibility.financialProjection3Months.trim() === "") {
+      if (!plan.feasibility.financialProjection3Months) {
         plan.feasibility.financialProjection3Months = capInfo.isZero
           ? "الشهر الأول: إيرادات متوقعة 4,000 ج.م - مصاريف 500 ج.م = صافي 3,500 ج.م\nالشهر الثاني: إيرادات متوقعة 8,000 ج.م - مصاريف 1,000 ج.م = صافي 7,000 ج.م\nالشهر الثالث: إيرادات متوقعة 14,000 ج.م - مصاريف 1,800 ج.م = صافي 12,200 ج.م"
           : "الشهر الأول: إيرادات متوقعة 12,000 ج.م - مصاريف 6,000 ج.م = صافي 6,000 ج.م\nالشهر الثاني: إيرادات متوقعة 22,000 ج.م - مصاريف 9,500 ج.م = صافي 12,500 ج.م\nالشهر الثالث: إيرادات متوقعة 38,000 ج.م - مصاريف 14,000 ج.م = صافي 24,000 ج.م";
@@ -1156,7 +1234,7 @@ ${JSON.stringify(compactPlanSummary, null, 2)}
 - confidenceScore: (number)`;
 
       const response = await this.generateContentWithFallback({
-        model: "gemini-3.6-flash",
+        model: "gemini-2.5-flash",
         contents: verificationPrompt,
         config: {
           systemInstruction: `أنت "المُدقّق والراجع الفني لمنصة Business Creator". خبير تدقيق خطط الأعمال وضمان الجودة في السوق المصري لعام 2026. أخرج النتيجة دائماً بصيغة JSON فقط وبنفس لغة خطة العمل.`,
@@ -1477,7 +1555,17 @@ ${JSON.stringify(compactPlanSummary, null, 2)}
 
     // 0. Feasibility completeness & mathematical coupling
     const capInfo = parseCapitalDetails(userData.availableCapital);
-    if (!plan.feasibility) plan.feasibility = {};
+    if (!plan.feasibility || typeof plan.feasibility !== 'object') plan.feasibility = {};
+
+    plan.feasibility.estimatedCost = safeString(plan.feasibility.estimatedCost);
+    plan.feasibility.launchTimeline = safeString(plan.feasibility.launchTimeline);
+    plan.feasibility.timeToProfit = safeString(plan.feasibility.timeToProfit);
+    plan.feasibility.expectedRevenue = safeString(plan.feasibility.expectedRevenue);
+    plan.feasibility.revenueModel = safeString(plan.feasibility.revenueModel);
+    plan.feasibility.pricingStrategy = safeString(plan.feasibility.pricingStrategy);
+    plan.feasibility.breakEvenPoint = safeString(plan.feasibility.breakEvenPoint);
+    plan.feasibility.financialProjection3Months = safeString(plan.feasibility.financialProjection3Months);
+
     if (!plan.feasibility.estimatedCost) {
       plan.feasibility.estimatedCost = capInfo.isZero 
         ? "0 ج.م (نموذج عمل بدون رأس مال)" 
@@ -2125,10 +2213,10 @@ ${JSON.stringify(compactPlanSummary, null, 2)}
 
   async generateBusinessPlan(userData: UserData, isPro: boolean = true): Promise<BusinessPlan> {
     try {
-      console.log("[Fast Business Pipeline] Step 1: Parallel live market & local insights fetch (max 28s)...");
+      console.log("[Fast Business Pipeline] Step 1: Parallel live market & local insights fetch (max 12s)...");
       const [liveMarketData, googleMapsInsights] = await Promise.all([
-        this.withTimeout(this.fetchLiveMarketData(userData), 28000, "بيانات عامة للسوق المحلي لعام 2026 والطلب المتاح"),
-        this.withTimeout(this.fetchGoogleMapsInsights(userData), 28000, "تحليل جغرافي ومنافسين محليين في المحافظة")
+        this.withTimeout(this.fetchLiveMarketData(userData), 12000, "بيانات عامة للسوق المحلي لعام 2026 والطلب المتاح"),
+        this.withTimeout(this.fetchGoogleMapsInsights(userData), 12000, "تحليل جغرافي ومنافسين محليين في المحافظة")
       ]);
 
       console.log("[Fast Business Pipeline] Step 2: Opportunity & Validated Winning Idea Solver...");
@@ -2188,7 +2276,7 @@ ${JSON.stringify(compactPlanSummary, null, 2)}
 3. أهم الاتجاهات الحالية والتحديات والفرص المتاحة لعام 2026 لتضمينها في تحليل السوق والجمهور المستهدف والاستراتيجية التسويقية ونموذج العمل التجاري.`;
 
       const searchPromise = this.generateContentWithFallback({
-        model: "gemini-3.6-flash",
+        model: "gemini-2.5-flash",
         contents: searchPrompt,
         config: {
           systemInstruction: "أنت خبير أبحاث تسويقية ومحلل بيانات السوق المصري. مهمتك هي جلب معلومات حقيقية ودقيقة ومحدثة من خلال البحث الفعلي على الويب باستخدام محرك بحث جوجل لمساعدة رائد الأعمال في مصر.",
@@ -2242,7 +2330,7 @@ ${JSON.stringify(compactPlanSummary, null, 2)}
       };
 
       const response = await this.generateContentWithFallback({
-        model: "gemini-3.6-flash",
+        model: "gemini-2.5-flash",
         contents: prompt,
         config: {
            systemInstruction: SYSTEM_INSTRUCTION,
@@ -2285,7 +2373,7 @@ ${JSON.stringify(compactPlanSummary, null, 2)}
 محتوى الأقسام المتأثرة حالياً: ${JSON.stringify(planContext)}`;
 
             const correctionResponse = await this.generateContentWithFallback({
-              model: "gemini-3.6-flash",
+              model: "gemini-2.5-flash",
               contents: correctionPrompt,
               config: {
                 systemInstruction: SYSTEM_INSTRUCTION,

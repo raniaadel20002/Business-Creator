@@ -137,7 +137,7 @@ export async function runAiTask(type: string, payload: any, userId: string): Pro
         key = process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || (process.env as any).geminiApiKey;
       }
       const gAI = new GoogleGenAI(key ? { apiKey: key } : {});
-      const modelsToTry = ["gemini-2.5-flash", "gemini-flash-latest", "gemini-3.1-flash-lite"];
+      const modelsToTry = ["gemini-3.5-flash", "gemini-flash-latest", "gemini-3.7-flash", "gemini-flash-lite-latest", "gemini-3.1-flash-lite", "gemini-2.5-flash"];
       let chatRes: string | null = null;
       let lastErr: any = null;
 
@@ -171,6 +171,22 @@ export async function runAiTask(type: string, payload: any, userId: string): Pro
   } catch (directErr: any) {
     console.error("[runAiTask] Direct execution failed, recording async backup task:", directErr);
     
+    // Telemetry capture
+    try {
+      const { ErrorTracker } = await import('./services/errorTracker');
+      ErrorTracker.captureError({
+        source: 'ai_engine',
+        context: `runAiTask:${type}`,
+        errorMessage: directErr?.message || String(directErr),
+        stackTrace: directErr?.stack,
+        userId: userId || 'anonymous',
+        metadata: {
+          taskType: type,
+          payloadSummary: typeof payload === 'object' ? Object.keys(payload || {}) : typeof payload
+        }
+      });
+    } catch (tErr) {}
+
     // Attempt 3: Record backup task in Supabase DB
     try {
       if (supabase && userId && userId !== 'anonymous') {

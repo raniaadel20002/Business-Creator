@@ -781,18 +781,21 @@ const App: React.FC = () => {
   };
 
   const logActivity = useCallback(async (action: string, module: string, details?: any) => {
-    if (!user) return;
+    if (!user || !user.id) return;
     try {
-      await supabase.from('logs').insert({
+      const { error } = await supabase.from('logs').insert({
         user_id: user.id,
         user_name: profileRef.current?.displayName || user.user_metadata?.full_name || user.email || 'Unknown',
-        user_email: user.email,
+        user_email: user.email || '',
         action,
         details: details ? { module, ...details } : { module },
         timestamp: new Date().toISOString()
       });
+      if (error) {
+        // Non-blocking telemetry warning
+      }
     } catch (err) {
-      console.error("Failed to log activity:", err);
+      // Non-blocking telemetry
     }
   }, [user]);
 
