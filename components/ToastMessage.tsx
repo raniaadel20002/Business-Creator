@@ -57,18 +57,17 @@ const ToastMessage: React.FC<ToastMessageProps> = ({ message, onClose, type = 's
             <div className="flex-1 text-sm leading-snug">
               {isQuotaError ? (
                 <div className="space-y-2 text-right" dir="rtl">
-                  <p className="font-bold text-red-700 text-sm md:text-base">تنبيه: تم تجاوز حصة القراءة المجانية لـ Firestore (Quota Exceeded)</p>
+                  <p className="font-bold text-red-700 text-sm md:text-base">تنبيه: تم تجاوز الحد المجاني لطلبات الذكاء الاصطناعي (AI Quota Limit)</p>
                   <p className="text-xs text-gray-600 leading-relaxed">
-                    لقد تجاوزت قاعدة البيانات الحد المجاني اليومي لقراءة البيانات. ستتم إعادة تعيين الحدود تلقائياً غداً. 
-                    إذا كنت بحاجة لترقية الحصة الحالية وتجنب انقطاع الخدمة، يرجى الانتقال إلى وحدة تحكم Firebase وتفعيل خيار الترقية:
+                    تم استهلاك الحصة المجانية المؤقتة لمفتاح الذكاء الاصطناعي (Gemini Free Tier). يقوم النظام بالتحويل التلقائي للنماذج المتاحة أو يمكنك إضافة مفاتيح إضافية في إعدادات البيئة لتفعيل التناوب التلقائي.
                   </p>
                   <a 
-                    href="https://console.firebase.google.com/project/gen-lang-client-0782647329/firestore/databases/ai-studio-cc0afd8f-ba32-43cb-b0ac-3cd2b8d59c47/data?openUpgradeDialog=true"
+                    href="https://aistudio.google.com/app/apikey" 
                     target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-block mt-1 text-xs font-bold text-red-600 hover:text-red-800 underline transition-colors"
+                    rel="noopener noreferrer" 
+                    className="inline-block mt-1 text-xs font-bold text-primary hover:underline transition-colors"
                   >
-                    رابط ترقية قاعدة البيانات في كونسول Firebase ↗
+                    الحصول على مفتاح Gemini API جديد من Google AI Studio ↗
                   </a>
                 </div>
               ) : (

@@ -14,7 +14,10 @@ import {
   Lightbulb,
   Briefcase,
   Sparkles,
-  Quote
+  Quote,
+  Target,
+  Palette,
+  TrendingUp
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { SubscriptionTier } from '../types';
@@ -28,8 +31,11 @@ interface FeatureItem {
 interface PricingCardProps {
   title: string;
   price: string;
+  originalPrice?: string;
+  discountBadge?: string;
   priceSuffix: string;
   description: string;
+  featureHeader?: string;
   features: FeatureItem[];
   buttonText: string;
   isPopular?: boolean;
@@ -42,8 +48,11 @@ interface PricingCardProps {
 const PricingCard: React.FC<PricingCardProps> = ({ 
   title, 
   price, 
+  originalPrice,
+  discountBadge,
   priceSuffix,
   description, 
+  featureHeader,
   features, 
   buttonText, 
   isPopular, 
@@ -57,37 +66,63 @@ const PricingCard: React.FC<PricingCardProps> = ({
     transition={{ duration: 0.2, ease: 'easeOut' }}
     className={`relative p-5 sm:p-8 rounded-2xl border transition-all flex flex-col h-full bg-white ${
       isPopular 
-        ? 'border-primary ring-1 ring-primary/20 shadow-lg shadow-primary/5 scale-100 md:scale-102 z-10' 
+        ? 'border-primary ring-2 ring-primary/20 shadow-xl shadow-primary/10 scale-100 md:scale-102 z-10' 
         : 'border-gray-200 hover:border-gray-300 shadow-sm'
     }`}
   >
     {isPopular && (
-      <div className="absolute -top-3 right-4 sm:right-8 bg-primary text-white text-[10px] sm:text-[11px] font-bold px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full shadow-sm tracking-wide">
+      <div className="absolute -top-3 right-4 sm:right-8 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[11px] sm:text-xs font-black px-3.5 py-1 rounded-full shadow-md tracking-wide flex items-center gap-1.5">
+        <Sparkles className="w-3.5 h-3.5" />
         الخيار الموصى به لرواد الأعمال
       </div>
     )}
 
-    <div className="flex items-center justify-between mb-3 sm:mb-4">
+    <div className="flex items-center justify-between mb-3 sm:mb-4 pt-1">
       <div className="flex items-center gap-1.5 sm:gap-2">
         <h3 className="text-lg sm:text-xl font-bold text-gray-900">{title}</h3>
       </div>
-      <div className={`flex items-center justify-center ${isPopular ? 'text-primary' : 'text-gray-500'}`}>
+      <div className={`flex items-center justify-center p-2 rounded-xl ${isPopular ? 'bg-orange-50 text-primary' : 'bg-gray-50 text-gray-500'}`}>
         {isPopular ? <Briefcase className="w-5 h-5 sm:w-6 sm:h-6" /> : <Lightbulb className="w-5 h-5 sm:w-6 sm:h-6" />}
       </div>
     </div>
 
-    <p className="text-gray-500 text-xs sm:text-sm mb-4 sm:mb-6 leading-relaxed text-right min-h-[36px] sm:min-h-[40px]">{description}</p>
+    <p className="text-gray-600 text-xs sm:text-sm mb-4 sm:mb-6 leading-relaxed text-right min-h-[36px] sm:min-h-[40px] font-normal">{description}</p>
     
-    <div className="flex items-baseline gap-1 sm:gap-1.5 mb-4 sm:mb-6 border-b border-gray-100 pb-4 sm:pb-6">
-      <span className="text-3xl sm:text-4xl font-black text-gray-900">{price}</span>
-      <span className="text-gray-500 font-medium text-xs sm:text-sm">{priceSuffix}</span>
+    <div className="mb-4 sm:mb-6 border-b border-gray-100 pb-4 sm:pb-6">
+      {originalPrice && (
+        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+          <span className="text-gray-400 line-through text-base sm:text-lg font-bold">
+            {originalPrice} ج.م
+          </span>
+          {discountBadge && (
+            <span className="inline-flex items-center gap-1 bg-red-50 text-red-600 border border-red-200/80 text-[11px] sm:text-xs font-black px-2.5 py-0.5 rounded-full shadow-xs">
+              <Sparkles className="w-3 h-3 text-red-500" />
+              {discountBadge}
+            </span>
+          )}
+        </div>
+      )}
+      <div className="flex items-baseline gap-1.5">
+        <span className="text-3xl sm:text-4xl font-black text-gray-900">{price}</span>
+        <span className="text-gray-500 font-medium text-xs sm:text-sm">{priceSuffix}</span>
+      </div>
     </div>
 
-    <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8 flex-1">
+    {/* Optional Section/Feature Header */}
+    {featureHeader && (
+      <div className="mb-4 p-3 bg-orange-50/90 border border-orange-200/80 rounded-xl flex items-center gap-2.5 text-orange-950 font-black text-xs sm:text-sm shadow-xs">
+        <div className="p-1 bg-orange-500 text-white rounded-lg shrink-0">
+          <Sparkles className="w-4 h-4" />
+        </div>
+        <span className="leading-snug">{featureHeader}</span>
+      </div>
+    )}
+
+    <div className="space-y-3 sm:space-y-3.5 mb-6 sm:mb-8 flex-1">
       {(features || []).map((feature, idx) => (
-        <div key={idx} className="flex items-start gap-2 sm:gap-3 group">
-          <div className={`mt-1 flex items-center justify-center flex-shrink-0 ${
-            isPopular ? 'text-primary' : 'text-gray-500'
+        <div key={idx} className="flex items-start gap-2.5 sm:gap-3 group">
+          <div className={`mt-0.5 flex items-center justify-center flex-shrink-0 p-1.5 rounded-lg ${
+            isPopular ? 'bg-orange-50 text-primary border border-orange-100' : 'bg-gray-100 text-gray-500'
           }`}>
             {feature.icon}
           </div>
@@ -100,9 +135,9 @@ const PricingCard: React.FC<PricingCardProps> = ({
       type="button"
       onClick={() => onSelect(tier)}
       disabled={isLoading}
-      className={`w-full py-2.5 sm:py-3.5 rounded-xl font-bold text-xs sm:text-sm md:text-base transition-all duration-200 cursor-pointer ${
+      className={`w-full py-3 sm:py-3.5 rounded-xl font-bold text-xs sm:text-sm md:text-base transition-all duration-200 cursor-pointer ${
         isPopular 
-          ? 'bg-primary text-white shadow-md shadow-primary/10 hover:bg-orange-600 active:scale-98' 
+          ? 'bg-gradient-to-r from-orange-500 via-orange-600 to-amber-500 text-white shadow-lg shadow-orange-500/20 hover:from-orange-600 hover:to-amber-600 active:scale-98' 
           : 'bg-gray-50 hover:bg-gray-100 text-gray-900 border border-gray-200 active:scale-98'
       } ${isLoading ? 'opacity-70 cursor-wait' : ''}`}
     >
@@ -136,19 +171,23 @@ const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan, currentPl
   );
 
   const starterFeatures: FeatureItem[] = [
-    { text: 'أقسام الخطة: النظرة العامة، الاستراتيجية، والسوق', icon: <Compass size={14} /> },
-    { text: 'تحليل المخاطر (SWOT) والأرقام والمالية المبدئية', icon: <BarChart3 size={14} /> },
-    { text: 'خطة التنفيذ العملية ومسار الأدوات ومصادر التعلم', icon: <Map size={14} /> },
-    { text: 'تشخيص القدرات واستخراج محاولة مجانية واحدة يومياً', icon: <UserCheck size={14} /> },
+    { text: 'أقسام الخطة: النظرة العامة، الاستراتيجية، والسوق المبدئي', icon: <Compass size={16} /> },
+    { text: 'تحليل المخاطر ونقاط القوة والضعف والأرقام والمالية المبدئية', icon: <BarChart3 size={16} /> },
+    { text: 'خطة التنفيذ العملية ومسار الأدوات ومصادر التعلم', icon: <Map size={16} /> },
+    { text: 'تشخيص القدرات واستخراج محاولة مجانية واحدة يومياً', icon: <UserCheck size={16} /> },
   ];
 
   const proFeatures: FeatureItem[] = [
-    { text: 'أقسام الخطة: المنافسين، العملاء، وتحليل السوق المتقدم', icon: <Users size={14} /> },
-    { text: 'أرقام حقيقية: دراسة جدوى واضحة للتكاليف والعوائد', icon: <Calculator size={14} /> },
-    { text: 'استراتيجية تسويق كاملة وخطوات اختراق المنافسين', icon: <Megaphone size={14} /> },
-    { text: 'نموذج أعمال يوضح تماماً آلية تدفق الأموال والهوية التجارية', icon: <Layers size={14} /> },
-    { text: 'مرشد ذكاء اصطناعي استراتيجي لدعمك، مع خطة الاستثمار والتمويل', icon: <Compass size={14} /> },
-    { text: 'دفع مرة واحدة يمنحك 100,000 نقطة (25 ألف لإنشاء المشروع، 10 آلاف للشعار، 500 لرسالة المرشد)', icon: <Coins size={14} /> },
+    { text: 'تحليل شامل ومتقدم للسوق والفرص والاتجاهات الحديثة وسد الفجوات السوقية', icon: <TrendingUp size={16} /> },
+    { text: 'تحديد دقيق لشخصية العميل المستهدف، سلوك الشراء، وأفضل قنوات الوصول', icon: <Users size={16} /> },
+    { text: 'تحليل متعمق للمنافسين المباشرين وغير المباشرين مع استراتيجيات التفوق واختراق السوق', icon: <Target size={16} /> },
+    { text: 'أرقام حقيقية: دراسة جدوى واضحة للتكاليف، نقطة التعادل، الإيرادات وتوقعات الأرباح', icon: <Calculator size={16} /> },
+    { text: 'استراتيجية تسويق كاملة: خطط إعلانية، أفكار صناعة المحتوى، وطرق الوصول لأول 1000 عميل', icon: <Megaphone size={16} /> },
+    { text: 'نموذج أعمال يوضح تماماً آلية تدفق الأموال، الأنشطة الرئيسية، وشبكة الشركاء', icon: <Layers size={16} /> },
+    { text: 'بناء الهوية التجارية المتكاملة وتصميم شعار احترافي مخصص لمشروعك', icon: <Palette size={16} /> },
+    { text: 'خطة تنفيذية تفصيلية بالأيام والأسابيع مع دليل الأدوات الرقمية ومسارات التعلم', icon: <Map size={16} /> },
+    { text: 'مرشد استراتيجي مخصص لدعمك لمتابعة تقدمك خطوة بخطوة، مع خطة الاستثمار والتمويل', icon: <Brain size={16} /> },
+    { text: 'دفع لمرة واحدة يمنحك 100,000 نقطة رصيد لاستخدام جميع أدوات المنصة وتنفيذ مشاريعك', icon: <Coins size={16} /> },
   ];
 
   const plans = [
@@ -159,15 +198,18 @@ const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan, currentPl
       priceSuffix: 'جنيه مصري / للأبد',
       description: 'لتحليل معطياتك الخاصة واستخراج الخطة المبدئية وتحديد الاتجاه العام للمشروع.',
       features: starterFeatures,
-      buttonText: currentPlan === 'FREE' ? 'باقة التشخيص الحالية' : 'ابدأ التحليل المجاني',
+      buttonText: currentPlan === 'FREE' ? 'باقة التشخيص الحالية' : 'احصل على فكرة مشروع مجاناً',
       color: 'gray-500',
     },
     {
       tier: 'PRO' as SubscriptionTier,
-      title: 'خطة رواد الاعمال',
+      title: 'خطة رواد الأعمال',
       price: '٤٩٩',
+      originalPrice: '١,٥٠٠',
+      discountBadge: 'خصم 67% لفترة محدودة جداً',
       priceSuffix: 'جنيه مصري / دفع لمرة واحدة',
-      description: 'الاستثمار الأكمل لبناء وتنمية مشروعك بشكل متكامل وبأرقام دقيقة وحقيقية ومتابعة ذكية.',
+      description: 'فكرة مشروع مخصصة وقابلة للتنفيذ تناسب إمكانياتك وظروفك بالكامل، مع خطة عمل استراتيجية تقودك خطوة بخطوة حتى تحقيق أول أرباحك وتنمية مشروعك بنجاح.',
+      featureHeader: 'فكرة مشروع قابلة للتنفيذ بناءً على ظروفك ورغبتك تشمل الآتي:',
       features: proFeatures,
       isPopular: true,
       buttonText: currentPlan === 'PRO' ? 'تجديد مخزون التنفيذ' : 'احصل على الخطة الكاملة',
@@ -190,7 +232,7 @@ const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan, currentPl
             استثمر في <span className="text-primary">مستقبلك</span> اليوم
           </h2>
           <p className="text-xs sm:text-sm md:text-base text-gray-500 max-w-xl mx-auto">
-            دعنا نصنع منك رائد اعمال
+            دعنا نصنع منك رائد أعمال ناجح
           </p>
         </div>
 
