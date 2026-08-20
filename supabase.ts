@@ -45,16 +45,15 @@ export async function runAiTask(type: string, payload: any, userId: string): Pro
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'text/event-stream, application/json',
       },
-      body: JSON.stringify({ type, payload, userId, stream: true }),
+      body: JSON.stringify({ type, payload, userId, stream: false }),
     });
 
     if (response.ok) {
       let finalData: any = null;
       const contentType = response.headers.get('content-type') || '';
 
-      // Handle Streaming / Server-Sent Events (SSE)
+      // Handle Streaming / Server-Sent Events (SSE) if returned
       if (contentType.includes('text/event-stream') && response.body) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder('utf-8');
