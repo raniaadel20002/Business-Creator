@@ -75,7 +75,7 @@ ChartJS.register(
   Filler
 );
 
-export function formatArabicDateTime(dateStr?: string | null): string {
+function formatArabicDateTime(dateStr?: string | null): string {
   if (!dateStr) return 'غير مسجل';
   try {
     const d = new Date(dateStr);

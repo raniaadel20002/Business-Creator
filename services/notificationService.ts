@@ -150,8 +150,9 @@ export const subscribeToNotifications = (
   // 1. Supabase Realtime channel
   let channel: any = null;
   try {
+    const channelName = `notifications_feed:${userId}:${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     channel = supabase
-      .channel(`notifications_feed:${userId}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {

@@ -1,27 +1,25 @@
 import type { Request, Response } from 'express';
-import { createClient } from '@supabase/supabase-js';
 import { GoogleGenAI } from '@google/genai';
 import { AiBusinessService } from '../services/geminiService.js';
 import { LogoService } from '../services/logoService.js';
+import { getSupabaseAdmin } from '../services/supabaseAdmin.js';
 
-// Vercel Serverless Function Configuration - Max Duration 60 seconds
-export const config = {
-  maxDuration: 60,
-};
-
-let supabaseAdminClient: any = null;
-
-function getSupabaseAdmin() {
-  if (supabaseAdminClient) return supabaseAdminClient;
-  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceKey) {
-    return null;
+async function isUserPro(userId?: string): Promise<boolean> {
+  if (!userId) return false;
+  try {
+    const supabase = getSupabaseAdmin();
+    if (supabase) {
+      const { data: userRecord } = await supabase
+        .from('users')
+        .select('subscription_plan')
+        .eq('id', userId)
+        .single();
+      return userRecord?.subscription_plan === 'PRO';
+    }
+  } catch (e) {
+    console.warn('[AI Task Handler] Failed to verify PRO status:', e);
   }
-  supabaseAdminClient = createClient(url, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false }
-  });
-  return supabaseAdminClient;
+  return false;
 }
 
 export default async function handler(req: Request, res: Response) {
@@ -54,11 +52,8 @@ export default async function handler(req: Request, res: Response) {
   const isStreamingRequested = stream === true || req.headers?.accept?.includes('text/event-stream');
 
   // Normalize Gemini Key
-  if (!process.env.GEMINI_API_KEY && process.env.VITE_GEMINI_API_KEY) {
-    process.env.GEMINI_API_KEY = process.env.VITE_GEMINI_API_KEY;
-  }
-  if (!process.env.GEMINI_API_KEY && process.env.geminiApiKey) {
-    process.env.GEMINI_API_KEY = process.env.geminiApiKey;
+  if (!process.env.GEMINI_API_KEY) {
+    process.env.GEMINI_API_KEY = process.env.VITE_GEMINI_API_KEY || process.env.geminiApiKey || "AIzaSyBMEPQ7zM9akR0ht5AQryrCPQ65asqpZog";
   }
 
   console.log(`[AI Task Handler] Processing task type: ${type} for user: ${userId || 'anonymous'} (Streaming: ${isStreamingRequested})`);
@@ -92,45 +87,14 @@ export default async function handler(req: Request, res: Response) {
 
     if (type === 'generate_plan') {
       const { userData, isPro } = payload || {};
-      let verifiedIsPro = false;
-
-      if (isPro && userId) {
-        try {
-          const supabase = getSupabaseAdmin();
-          if (supabase) {
-            const { data: userRecord } = await supabase
-              .from('users')
-              .select('subscription_plan')
-              .eq('id', userId)
-              .single();
-            if (userRecord && userRecord.subscription_plan === 'PRO') {
-              verifiedIsPro = true;
-            }
-          }
-        } catch (e) {
-          console.warn('[AI Task Handler] Failed to verify PRO status, defaulting to provided:', e);
-        }
-      }
-
-      result = await aiService.generateBusinessPlan(userData, verifiedIsPro || !!isPro);
+      const verifiedPro = userId ? await isUserPro(userId) : false;
+      result = await aiService.generateBusinessPlan(userData, verifiedPro || !!isPro);
     } else if (type === 'complete_pro') {
       const { currentPlan } = payload || {};
       if (userId) {
-        try {
-          const supabase = getSupabaseAdmin();
-          if (supabase) {
-            const { data: userRecord } = await supabase
-              .from('users')
-              .select('subscription_plan')
-              .eq('id', userId)
-              .single();
-            if (!userRecord || userRecord.subscription_plan !== 'PRO') {
-              // Non-blocking warning in dev/mock, enforce strictly in production
-              console.warn(`[AI Task Handler] User ${userId} requested complete_pro with plan: ${userRecord?.subscription_plan}`);
-            }
-          }
-        } catch (e) {
-          console.warn('[AI Task Handler] Error checking user plan for complete_pro:', e);
+        const isProMember = await isUserPro(userId);
+        if (!isProMember) {
+          console.warn(`[AI Task Handler] Non-PRO user ${userId} requested complete_pro`);
         }
       }
 
@@ -145,7 +109,7 @@ export default async function handler(req: Request, res: Response) {
       let key = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
       const gAI = new GoogleGenAI(key ? { apiKey: key } : {});
 
-      const modelsToTry = ["gemini-2.5-flash", "gemini-flash-latest", "gemini-3.1-flash-lite"];
+      const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
       let lastChatError = null;
       let chatRes = null;
 

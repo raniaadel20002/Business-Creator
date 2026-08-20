@@ -43,24 +43,10 @@ import sendEmailHandler from "./api/send-email.js";
 import paymobCheckoutHandler from "./api/paymob-checkout.js";
 import paymobWebhookHandler from "./api/paymob-webhook.js";
 import aiTaskHandler from "./api/ai-task.js";
+import { getSupabaseAdmin } from "./services/supabaseAdmin.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-let supabaseAdminClient: any = null;
-
-function getSupabaseAdmin() {
-  if (supabaseAdminClient) return supabaseAdminClient;
-  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceKey) {
-    throw new Error("SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY env vars not set.");
-  }
-  supabaseAdminClient = createClient(url, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false }
-  });
-  return supabaseAdminClient;
-}
 
 async function sendIncompleteFormReminderEmailOnServer(to: string, userName: string, gender: string) {
   const resendApiKey = process.env.RESEND_API_KEY;

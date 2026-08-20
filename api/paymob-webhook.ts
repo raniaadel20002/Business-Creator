@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import crypto from 'crypto';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseAdmin } from '../services/supabaseAdmin.js';
 
 export default async function paymobWebhookHandler(req: Request, res: Response) {
   try {
@@ -93,11 +93,11 @@ export default async function paymobWebhookHandler(req: Request, res: Response) 
       }
 
       if (userId && userId !== 'NA') {
-        const supabaseUrl = process.env.SUPABASE_URL!;
-        const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-        const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-          auth: { autoRefreshToken: false, persistSession: false }
-        });
+        const supabase = getSupabaseAdmin();
+        if (!supabase) {
+          console.error('[Paymob Webhook] Supabase Admin client not initialized');
+          return res.status(500).send('Database unavailable');
+        }
 
         const { data: userData, error: fetchError } = await supabase
           .from('users')

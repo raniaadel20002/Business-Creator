@@ -187,6 +187,12 @@ const BusinessDashboard: React.FC<BusinessDashboardProps> = ({ plan, activeTab, 
     }
   }, [plan.identity?.logoSystem]);
 
+  useEffect(() => {
+    if (activeTab) {
+      onLogActivity?.('view_tab', activeTab, { projectName: plan.projectName });
+    }
+  }, [activeTab, plan.projectName, onLogActivity]);
+
   const challengesAdvice = (plan.challengesAdvice && plan.challengesAdvice.length > 0)
     ? plan.challengesAdvice
     : (activeUserData?.expectedChallenges ? getChallengeAdvice(activeUserData.expectedChallenges, plan.projectName) : []);
@@ -197,6 +203,7 @@ const BusinessDashboard: React.FC<BusinessDashboardProps> = ({ plan, activeTab, 
     const updatedPlan = { ...plan, isExecuted: true };
     onExecutePlan?.();
     onSavePlan?.(updatedPlan);
+    onLogActivity?.('execute_plan', 'execution', { projectName: plan.projectName });
 
     if (user && user.id) {
       try {

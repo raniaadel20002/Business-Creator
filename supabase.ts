@@ -38,6 +38,16 @@ export function subscribeToTaskCompletions(callback: TaskCallback) {
   };
 }
 
+function notifyTaskSuccess(type: string, payload: any, result: any) {
+  const mockTaskId = `task-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  taskCallbacks.forEach(cb => {
+    try {
+      cb(mockTaskId, { id: mockTaskId, status: 'completed', type, payload, result });
+    } catch (e) {}
+  });
+  return result;
+}
+
 export async function runAiTask(type: string, payload: any, userId: string): Promise<any> {
   // 1. Attempt 1: Serverless API endpoint
   try {
@@ -96,13 +106,7 @@ export async function runAiTask(type: string, payload: any, userId: string): Pro
       }
 
       if (finalData && finalData.success && finalData.result) {
-        const mockTaskId = `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        taskCallbacks.forEach(cb => {
-          try {
-            cb(mockTaskId, { id: mockTaskId, status: 'completed', type, payload, result: finalData.result });
-          } catch (e) {}
-        });
-        return finalData.result;
+        return notifyTaskSuccess(type, payload, finalData.result);
       }
     }
   } catch (apiErr) {
@@ -161,13 +165,7 @@ export async function runAiTask(type: string, payload: any, userId: string): Pro
     }
 
     if (result) {
-      const mockTaskId = `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      taskCallbacks.forEach(cb => {
-        try {
-          cb(mockTaskId, { id: mockTaskId, status: 'completed', type, payload, result });
-        } catch (e) {}
-      });
-      return result;
+      return notifyTaskSuccess(type, payload, result);
     }
     throw new Error("لم يتم إرجاع أي نتيجة من محرك الذكاء الاصطناعي.");
   } catch (directErr: any) {
