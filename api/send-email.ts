@@ -46,7 +46,7 @@ export default async function handler(req: any, res: any) {
     const resend = new Resend(resendApiKey);
     
     let fromEmail = process.env.RESEND_FROM_EMAIL;
-    if (!fromEmail || !fromEmail.includes("@") || fromEmail.startsWith("re_")) {
+    if (!fromEmail || !fromEmail.includes("@") || fromEmail.startsWith("re_") || fromEmail.includes("yourdomain.com") || fromEmail.includes("example.com")) {
       fromEmail = "Business Creator <onboarding@resend.dev>";
     }
     

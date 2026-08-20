@@ -1,5 +1,4 @@
-import type { Request, Response } from 'express';
-import { GoogleGenAI } from '@google/genai';
+import { createGeminiClient, getModelFallbackList, executeWithGeminiPool } from '../services/geminiClient.js';
 import { AiBusinessService } from '../services/geminiService.js';
 import { LogoService } from '../services/logoService.js';
 import { getSupabaseAdmin } from '../services/supabaseAdmin.js';
@@ -105,11 +104,7 @@ export default async function handler(req: Request, res: Response) {
       result = await logoService.generateLogoSystem(prompt, projectName, idea, styleDesc);
     } else if (type === 'chat_message' || type === 'chat') {
       const { systemInstruction: clientInstruction, chatHistory } = payload || {};
-      
-      let key = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-      const gAI = new GoogleGenAI(key ? { apiKey: key } : {});
-
-      const modelsToTry = ["gemini-3.5-flash", "gemini-3.7-flash", "gemini-flash-latest", "gemini-flash-lite-latest", "gemini-3.1-flash-lite", "gemini-2.5-flash"];
+      const modelsToTry = getModelFallbackList("gemini-3.5-flash");
       let lastChatError = null;
       let chatRes = null;
 
@@ -119,13 +114,15 @@ export default async function handler(req: Request, res: Response) {
 
       for (const modelName of modelsToTry) {
         try {
-          const response = await gAI.models.generateContent({
-            model: modelName,
-            contents: chatHistory || [],
-            config: {
-              systemInstruction: safeSystemInstruction,
-              temperature: 0.7,
-            }
+          const response = await executeWithGeminiPool(async (client) => {
+            return await client.models.generateContent({
+              model: modelName,
+              contents: chatHistory || [],
+              config: {
+                systemInstruction: safeSystemInstruction,
+                temperature: 0.7,
+              }
+            });
           });
 
           if (response && response.text) {
