@@ -987,11 +987,6 @@ ${googleMapsInsights}
           lastError = error;
           const errStr = typeof error === 'object' ? JSON.stringify(error) : String(error);
 
-          // If quota / 429 error occurs, rethrow so pool immediately switches key and retries this exact step
-          if (geminiKeyPool.isQuotaError(error)) {
-            throw error;
-          }
-
           // 1. If tools (like Google Search) caused error, retry immediately without tools
           if (activeConfig.tools || activeConfig.toolConfig) {
             console.warn(`[Gemini SDK] Tool grounding error on ${modelName}, retrying WITHOUT tools immediately...`);
@@ -1011,7 +1006,6 @@ ${googleMapsInsights}
                 return response;
               }
             } catch (tErr: any) {
-              if (geminiKeyPool.isQuotaError(tErr)) throw tErr;
               lastError = tErr;
             }
           }
@@ -1037,12 +1031,16 @@ ${googleMapsInsights}
               console.log(`[Gemini SDK] Successfully processed model ${modelName} after stripping responseSchema`);
               return response;
             } catch (retryError: any) {
-              if (geminiKeyPool.isQuotaError(retryError)) throw retryError;
               lastError = retryError;
             }
           }
 
-          await new Promise(resolve => setTimeout(resolve, 300));
+          // If quota / 429 error occurs for this specific model, log and allow the loop to try the next model in the fallback list
+          if (geminiKeyPool.isQuotaError(lastError)) {
+            console.warn(`[Gemini SDK] Model ${modelName} hit quota limit. Trying next model in fallback list...`);
+          }
+
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
       }
 
