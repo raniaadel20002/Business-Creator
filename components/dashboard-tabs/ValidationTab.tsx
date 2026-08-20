@@ -81,7 +81,7 @@ const ValidationTab: React.FC<ValidationTabProps> = ({
       {onConsultAdvisor && (
         <AdvisorCTA 
           icon={CheckCircle2}
-          question="اسأل المستشار كيف تضمن ملاءمة مشروعي للاستثمار والنجاح؟"
+          question="اسأل المرشد كيف تضمن ملاءمة مشروعي للاستثمار والنجاح؟"
           onConsult={onConsultAdvisor}
           isFreeUser={isFreeUser}
         />

@@ -70,7 +70,7 @@ const BusinessStrategyTab: React.FC<BusinessStrategyTabProps> = ({
         {onConsultAdvisor && (
           <AdvisorCTA 
             icon={Compass}
-            question="اسأل المستشار كيف تضع خارطة طريق ومؤشرات أداء لمشروعك؟"
+            question="اسأل المرشد كيف تضع خارطة طريق ومؤشرات أداء لمشروعك؟"
             onConsult={onConsultAdvisor}
             isFreeUser={isFreeUser}
           />

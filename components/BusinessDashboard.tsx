@@ -247,7 +247,7 @@ const BusinessDashboard: React.FC<BusinessDashboardProps> = ({ plan, activeTab, 
       case 'marketing': sectionName = 'التسويق'; break;
       case 'investment': sectionName = 'الاستثمار'; break;
       case 'resources': sectionName = 'الأدوات والتعلم'; break;
-      case 'advisor': sectionName = 'المستشار'; break;
+      case 'advisor': sectionName = 'المرشد'; break;
     }
 
     return (
@@ -367,7 +367,7 @@ const BusinessDashboard: React.FC<BusinessDashboardProps> = ({ plan, activeTab, 
                   : 'هل أنت جاهز لإكمال جميع مخرجات مشروعك بأرقام واقعية واستراتيجيات متقدمة؟'}
               </h3>
               <p className="text-xs text-gray-600 leading-relaxed max-w-3xl">
-                تمت ترقية حسابك بنجاح! اضغط على زر إكمال الخطة ليقوم المستشار الذكي باستخراج خطة العمل التفصيلية ودراسة الجدوى الشاملة لك فوراً.
+                تمت ترقية حسابك بنجاح! اضغط على زر إكمال الخطة ليقوم المرشد الذكي باستخراج خطة العمل التفصيلية ودراسة الجدوى الشاملة لك فوراً.
               </p>
             </div>
             <div className="flex flex-col items-center sm:items-end lg:items-center gap-1.5 w-full lg:w-auto shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-green-200/50">
@@ -465,7 +465,7 @@ const BusinessDashboard: React.FC<BusinessDashboardProps> = ({ plan, activeTab, 
 
             {/* Branded Advisor Call-to-action Button */}
             <AdvisorCTA 
-              question="اسأل المستشار هل فكرتك قابلة للتوسع أو التغيير؟"
+              question="اسأل المرشد هل فكرتك قابلة للتوسع أو التغيير؟"
               onConsult={handleAdvisorClick}
               isFreeUser={isFreeUser}
             />
@@ -564,7 +564,7 @@ const BusinessDashboard: React.FC<BusinessDashboardProps> = ({ plan, activeTab, 
             {/* Branded Advisor Call-to-action Button */}
             <AdvisorCTA 
               icon={Palette}
-              question="اسأل المستشار كيف تختار طابع علامتك التجارية وتصميم الشعار؟"
+              question="اسأل المرشد كيف تختار طابع علامتك التجارية وتصميم الشعار؟"
               onConsult={handleAdvisorClick}
               isFreeUser={isFreeUser}
             />

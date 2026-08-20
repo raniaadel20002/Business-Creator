@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageCircle, Lock } from 'lucide-react';
+import { Compass, Lock } from 'lucide-react';
 
 export interface AdvisorCTAProps {
   question: string;
@@ -13,7 +13,7 @@ export const AdvisorCTA: React.FC<AdvisorCTAProps> = ({
   question,
   onConsult,
   isFreeUser = false,
-  icon: Icon = MessageCircle,
+  icon: Icon = Compass,
   className = '',
 }) => {
   return (
@@ -29,12 +29,12 @@ export const AdvisorCTA: React.FC<AdvisorCTAProps> = ({
         {isFreeUser ? (
           <>
             <Lock size={13} className="shrink-0" />
-            <span>اسأل المستشار (ترقية)</span>
+            <span>اسأل المرشد (ترقية)</span>
           </>
         ) : (
           <>
-            <MessageCircle size={14} />
-            <span>اسأل المستشار</span>
+            <Compass size={14} />
+            <span>اسأل المرشد</span>
           </>
         )}
       </button>

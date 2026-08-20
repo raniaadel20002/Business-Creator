@@ -36,14 +36,17 @@ export function createGeminiClient(): GoogleGenAI {
 
 const FALLBACK_GEMINI_MODELS = [
   "gemini-3.5-flash",
-  "gemini-flash-latest",
   "gemini-3.7-flash",
+  "gemini-flash-latest",
   "gemini-flash-lite-latest",
   "gemini-3.1-flash-lite",
   "gemini-2.5-flash",
 ];
 
 export function getModelFallbackList(primaryModel?: string): string[] {
-  const list = [primaryModel, ...FALLBACK_GEMINI_MODELS].filter(Boolean) as string[];
+  const preferred = (primaryModel && primaryModel !== "gemini-2.5-flash" && primaryModel !== "gemini-2.0-flash") 
+    ? primaryModel 
+    : "gemini-3.5-flash";
+  const list = [preferred, ...FALLBACK_GEMINI_MODELS].filter(Boolean) as string[];
   return Array.from(new Set(list));
 }

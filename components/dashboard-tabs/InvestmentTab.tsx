@@ -67,7 +67,7 @@ const InvestmentTab: React.FC<InvestmentTabProps> = ({
         {onConsultAdvisor && (
           <AdvisorCTA 
             icon={Landmark}
-            question="اسأل المستشار كيف تعرض مشروعك وتجذب المستثمرين؟"
+            question="اسأل المرشد كيف تعرض مشروعك وتجذب المستثمرين؟"
             onConsult={onConsultAdvisor}
             isFreeUser={isFreeUser}
           />

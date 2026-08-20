@@ -91,7 +91,7 @@ const TargetAudienceTab: React.FC<TargetAudienceTabProps> = ({
         {onConsultAdvisor && (
           <AdvisorCTA 
             icon={Target}
-            question="اسأل المستشار كيف تجعل جمهورك المستهدف يعشق علامتك؟"
+            question="اسأل المرشد كيف تجعل جمهورك المستهدف يعشق علامتك؟"
             onConsult={onConsultAdvisor}
             isFreeUser={isFreeUser}
           />

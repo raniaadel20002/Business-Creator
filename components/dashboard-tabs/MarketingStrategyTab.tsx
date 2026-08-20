@@ -48,7 +48,7 @@ export const MarketingStrategyTab: React.FC<MarketingStrategyTabProps> = ({ plan
         {/* Branded Advisor Call-to-action Button */}
         {onConsultAdvisor && (
           <AdvisorCTA 
-            question="اسأل المستشار كيف تصمم حملة تسويقية مبتكرة لمشروعك؟"
+            question="اسأل المرشد كيف تصمم حملة تسويقية مبتكرة لمشروعك؟"
             onConsult={onConsultAdvisor}
             isFreeUser={isFreeUser}
           />

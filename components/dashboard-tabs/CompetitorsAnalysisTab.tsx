@@ -103,7 +103,7 @@ export const CompetitorsAnalysisTab: React.FC<CompetitorsAnalysisTabProps> = ({ 
       {/* Branded Advisor Call-to-action Button */}
       {onConsultAdvisor && (
         <AdvisorCTA 
-          question="اسأل المستشار كيف تتفوق وتستحوذ على منافسيك في السوق؟"
+          question="اسأل المرشد كيف تتفوق وتستحوذ على منافسيك في السوق؟"
           onConsult={onConsultAdvisor}
           isFreeUser={isFreeUser}
         />

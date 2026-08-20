@@ -395,8 +395,8 @@ const App: React.FC = () => {
         if (!isAdvisorChatOpen) {
           addGlobalNotification({
             id: taskId,
-            title: 'الرد من المستشار جاهز',
-            message: 'مستشارك الاستراتيجي الذكي قام بالرد على سؤالك. تفضل بقراءة الرد ومتابعة النقاش.',
+            title: 'الرد من المرشد جاهز',
+            message: 'مرشدك الاستراتيجي الذكي قام بالرد على سؤالك. تفضل بقراءة الرد ومتابعة النقاش.',
             type: 'chat_message',
             actionLabel: 'ذهاب للشات',
             onAction: () => {
@@ -1198,7 +1198,7 @@ const App: React.FC = () => {
     { id: 'marketing', label: 'التسويق', icon: Rocket, isProFeature: true },
     { id: 'investment', label: 'الاستثمار', icon: Landmark, isProFeature: true },
     { id: 'resources', label: 'الأدوات والتعلم', icon: Wrench },
-    { id: 'advisor', label: 'المستشار', icon: Sparkles, isProFeature: true },
+    { id: 'advisor', label: 'المرشد', icon: Compass, isProFeature: true },
   ] as const;
 
   const isProjectPro = plan?.isPro || activeProject?.isPro || profile?.subscriptionPlan === 'PRO';

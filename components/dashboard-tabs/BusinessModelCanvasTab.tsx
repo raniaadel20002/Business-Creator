@@ -30,7 +30,7 @@ export const BusinessModelCanvasTab: React.FC<BusinessModelCanvasTabProps> = ({ 
           {onConsultAdvisor && (
             <AdvisorCTA 
               icon={Briefcase}
-              question="اسأل المستشار كيف تنمي مصادر الدخل وتخفض التكاليف؟"
+              question="اسأل المرشد كيف تنمي مصادر الدخل وتخفض التكاليف؟"
               onConsult={onConsultAdvisor}
               isFreeUser={isFreeUser}
             />

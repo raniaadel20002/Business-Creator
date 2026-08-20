@@ -73,7 +73,7 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({
       {onConsultAdvisor && (
         <AdvisorCTA 
           icon={GraduationCap}
-          question="اسأل المستشار كيف تتغلب على أهم التحديات التشغيلية؟"
+          question="اسأل المرشد كيف تتغلب على أهم التحديات التشغيلية؟"
           onConsult={onConsultAdvisor}
           isFreeUser={isFreeUser}
         />

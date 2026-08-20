@@ -728,7 +728,7 @@ export class AiBusinessService {
 4. أهم متطلبات التراخيص والخطوات القانونية اللازمة لهذا النشاط تحديداً لدى الجهات الرسمية.`;
 
       const response = await this.generateContentWithFallback({
-        model: "gemini-2.5-flash",
+        model: "gemini-flash-latest",
         contents: searchPrompt,
         config: {
           systemInstruction: `أنت خبير أبحاث تسويقية واقتصادية في ${targetLocation}. مهمتك هي البحث الفعلي عبر جوجل لجلب بيانات أسعار حقيقية ومنافسين فعليين لعام 2026.`,
@@ -768,7 +768,7 @@ export class AiBusinessService {
 3. التوصيات المكانية الأفضل لتقليل تكلفة الإيجار والمقر وتفادي المنافسة المباشرة في ${targetCity}.`;
 
       const response = await this.generateContentWithFallback({
-        model: "gemini-2.5-flash",
+        model: "gemini-flash-latest",
         contents: mapsPrompt,
         config: {
           systemInstruction: `أنت محلل جغرافي متخصص في الأنشطة التجارية في ${targetLocation}. مهمتك هي البحث ورصد المنافسين والمناطق الحيوية في ${targetCity}.`,
@@ -805,7 +805,7 @@ ${googleMapsInsights}
 
     try {
       const response = await this.generateContentWithFallback({
-        model: "gemini-2.5-flash",
+        model: "gemini-flash-latest",
         contents: prompt,
         config: {
           systemInstruction: STAGE_1_AND_2_COMBINED_PROMPT.replace('${availableCapital}', availableCapital),
@@ -881,7 +881,7 @@ ${googleMapsInsights}
     }
 
     const response = await this.generateContentWithFallback({
-      model: "gemini-2.5-flash",
+      model: "gemini-flash-latest",
       contents: prompt,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION + "\n\n" + STAGE_3_BLUEPRINT_EXECUTION_PROMPT,
@@ -1234,7 +1234,7 @@ ${JSON.stringify(compactPlanSummary, null, 2)}
 - confidenceScore: (number)`;
 
       const response = await this.generateContentWithFallback({
-        model: "gemini-2.5-flash",
+        model: "gemini-flash-latest",
         contents: verificationPrompt,
         config: {
           systemInstruction: `أنت "المُدقّق والراجع الفني لمنصة Business Creator". خبير تدقيق خطط الأعمال وضمان الجودة في السوق المصري لعام 2026. أخرج النتيجة دائماً بصيغة JSON فقط وبنفس لغة خطة العمل.`,
@@ -2276,7 +2276,7 @@ ${JSON.stringify(compactPlanSummary, null, 2)}
 3. أهم الاتجاهات الحالية والتحديات والفرص المتاحة لعام 2026 لتضمينها في تحليل السوق والجمهور المستهدف والاستراتيجية التسويقية ونموذج العمل التجاري.`;
 
       const searchPromise = this.generateContentWithFallback({
-        model: "gemini-2.5-flash",
+        model: "gemini-flash-latest",
         contents: searchPrompt,
         config: {
           systemInstruction: "أنت خبير أبحاث تسويقية ومحلل بيانات السوق المصري. مهمتك هي جلب معلومات حقيقية ودقيقة ومحدثة من خلال البحث الفعلي على الويب باستخدام محرك بحث جوجل لمساعدة رائد الأعمال في مصر.",
@@ -2330,7 +2330,7 @@ ${JSON.stringify(compactPlanSummary, null, 2)}
       };
 
       const response = await this.generateContentWithFallback({
-        model: "gemini-2.5-flash",
+        model: "gemini-flash-latest",
         contents: prompt,
         config: {
            systemInstruction: SYSTEM_INSTRUCTION,
@@ -2373,7 +2373,7 @@ ${JSON.stringify(compactPlanSummary, null, 2)}
 محتوى الأقسام المتأثرة حالياً: ${JSON.stringify(planContext)}`;
 
             const correctionResponse = await this.generateContentWithFallback({
-              model: "gemini-2.5-flash",
+              model: "gemini-flash-latest",
               contents: correctionPrompt,
               config: {
                 systemInstruction: SYSTEM_INSTRUCTION,

@@ -104,7 +104,7 @@ const MarketAnalysisTab: React.FC<MarketAnalysisTabProps> = ({
         {onConsultAdvisor && (
           <AdvisorCTA 
             icon={TrendingUp}
-            question="اسأل المستشار كيف تحقق أقصى حصة سوقية لمشروعك؟"
+            question="اسأل المرشد كيف تحقق أقصى حصة سوقية لمشروعك؟"
             onConsult={onConsultAdvisor}
             isFreeUser={isFreeUser}
           />

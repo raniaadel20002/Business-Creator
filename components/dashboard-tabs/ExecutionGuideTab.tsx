@@ -73,7 +73,7 @@ const ExecutionGuideTab: React.FC<ExecutionGuideTabProps> = ({
       {onConsultAdvisor && (
         <AdvisorCTA 
           icon={Zap}
-          question="اسأل المستشار كيف تنفذ مهام خطة الإطلاق بسلاسة وبأقل وقت؟"
+          question="اسأل المرشد كيف تنفذ مهام خطة الإطلاق بسلاسة وبأقل وقت؟"
           onConsult={onConsultAdvisor}
           isFreeUser={isFreeUser}
         />

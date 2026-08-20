@@ -69,7 +69,7 @@ const FinancialsTab: React.FC<FinancialsTabProps> = ({
         {onConsultAdvisor && (
           <AdvisorCTA 
             icon={Coins}
-            question="اسأل المستشار كيف تدير رأس المال وتحقق أرباحاً سريعة؟"
+            question="اسأل المرشد كيف تدير رأس المال وتحقق أرباحاً سريعة؟"
             onConsult={onConsultAdvisor}
             isFreeUser={isFreeUser}
           />

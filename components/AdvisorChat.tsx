@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  Send, Bot, User, Loader2, MessageSquare, Trash2, Sparkles, RefreshCw, Info, X, MoreVertical, History, Plus, ChevronRight, Pin, PinOff, Square, Copy, Check, ArrowUp, ArrowDown, ArrowLeft,
+  Send, Compass, User, Loader2, MessageSquare, Trash2, Sparkles, RefreshCw, Info, X, MoreVertical, History, Plus, ChevronRight, Pin, PinOff, Square, Copy, Check, ArrowUp, ArrowDown, ArrowLeft,
   Lightbulb, Search, Users, Briefcase, Megaphone
 } from 'lucide-react';
 import { UserProfile, BusinessPlan, ChatSession, ChatMessage, TOKEN_COSTS } from '../types';
@@ -92,7 +92,7 @@ const AdvisorMessageItem = React.memo(({ msg, onUpgrade }: AdvisorMessageItemPro
     return (
       <div className="flex w-full justify-start">
         <InsufficientTokensCard
-          title="مستشار Business Creator"
+          title="مرشد Business Creator"
           badgeText="تنبيه رصيد المحادثة"
           message="عفواً، لقد نفد رصيدك من النقاط. يرجى شراء باقة جديدة لتتمكن من استخدام المحادثة."
           description="باقة رواد الأعمال (PRO) تمنحك 100,000 نقطة لتحليل وتنفيذ غير محدود مع استشارات ذكية متواصلة."
@@ -231,7 +231,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                   className="absolute bottom-12 right-0 z-40 w-56 bg-white border border-border rounded-2xl shadow-2xl overflow-hidden py-2"
                 >
                   <div className="px-4 py-3 border-b border-border/50 bg-gray-50/50 mb-1 text-right">
-                    <p className="text-xs text-text-muted font-bold mb-2">خيارات المستشار</p>
+                    <p className="text-xs text-text-muted font-bold mb-2">خيارات المرشد</p>
                     <div className="flex flex-col gap-1 text-[11px] text-gray-650 bg-white p-2 rounded-lg border border-border/50 shadow-sm">
                       <div className="flex justify-between items-center" dir="rtl">
                         <span>رصيدك الحالي:</span>
@@ -268,7 +268,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                     dir="rtl"
                   >
                     <ChevronRight size={18} />
-                    <span className="font-bold text-sm">الخروج من المستشار</span>
+                    <span className="font-bold text-sm">الخروج من المرشد</span>
                   </button>
                   
                   <div className="h-px bg-border/50 my-1 mx-2" />
@@ -308,7 +308,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                 <button
                   onClick={onStop}
                   className="absolute left-1.5 bottom-1.5 w-8 h-8 flex items-center justify-center rounded-full bg-gray-800 text-white hover:bg-black transition-all shadow-md active:scale-95 z-10 border-none"
-                  title="إيقاف المستشار"
+                  title="إيقاف المرشد"
                 >
                   <Square size={12} className="fill-white" />
                 </button>
@@ -532,7 +532,7 @@ const AdvisorChat: React.FC<AdvisorChatProps> = ({ profile, plan, onClose, onUpg
     const newId = profile.uid + '_' + Date.now().toString() + Math.random().toString(36).substring(7);
     const initialMessage: ChatMessage = {
       role: 'model',
-      content: `أهلاً بك! أنا مستشارك الخاص في موضوع "**${newChatTitle}**".\n\nما الذي تود مناقشته بخصوص هذا الموضوع؟`,
+      content: `أهلاً بك! أنا مرشدك الخاص في موضوع "**${newChatTitle}**".\n\nما الذي تود مناقشته بخصوص هذا الموضوع؟`,
       timestamp: new Date().toISOString()
     };
     
@@ -654,7 +654,7 @@ const AdvisorChat: React.FC<AdvisorChatProps> = ({ profile, plan, onClose, onUpg
           user_id: profile.uid,
           user_name: profile.displayName || profile.email || 'مستخدم',
           user_email: profile.email || '',
-          action: 'إرسال رسالة للمستشار الذكي (Send Advisor Message)',
+          action: 'إرسال رسالة للمرشد الذكي (Send Advisor Message)',
           details: { projectName: plan.projectName, messageLength: messageContent.length, module: 'Advisor' },
           timestamp: new Date().toISOString()
         });
@@ -667,7 +667,7 @@ const AdvisorChat: React.FC<AdvisorChatProps> = ({ profile, plan, onClose, onUpg
       const previousChatsContext = '';
       
       const systemInstruction = `
-        أنت "مستشار بزنس كرياتور" (Business Creator Advisor). 
+        أنت "مرشد بزنس كرياتور" (Business Creator Guide & Mentor). 
         خبير استراتيجي، محلل أسواق، ومرشد لرواد الأعمال، وتمثل منصة Business Creator.
         
         وصف المنصة التي تمثلها (Business Creator):
@@ -870,16 +870,16 @@ const AdvisorChat: React.FC<AdvisorChatProps> = ({ profile, plan, onClose, onUpg
   if (isHistoryOpen) {
     return (
       <div className="flex-1 flex flex-col bg-background p-6 overflow-hidden max-w-3xl mx-auto w-full relative">
-         <div className="absolute top-4 right-6 z-40">
-           <button 
-             onClick={onClose}
-             className="flex items-center justify-center gap-2 px-4 h-12 bg-white/80 backdrop-blur border border-border/50 text-text-primary rounded-full shadow-md transition-all hover:bg-gray-100 hover:pr-5 group"
-             title="الخروج من المستشار"
-           >
-             <ChevronRight size={20} className="transition-transform group-hover:translate-x-1" />
-             <span className="font-bold text-sm hidden sm:inline">الخروج من المستشار</span>
-           </button>
-         </div>
+          <div className="absolute top-4 right-6 z-40">
+            <button 
+              onClick={onClose}
+              className="flex items-center justify-center gap-2 px-4 h-12 bg-white/80 backdrop-blur border border-border/50 text-text-primary rounded-full shadow-md transition-all hover:bg-gray-100 hover:pr-5 group"
+              title="الخروج من المرشد"
+            >
+              <ChevronRight size={20} className="transition-transform group-hover:translate-x-1" />
+              <span className="font-bold text-sm hidden sm:inline">الخروج من المرشد</span>
+            </button>
+          </div>
 
          <div className="flex justify-between items-center mb-8 mt-12">
            <h2 className="text-2xl font-bold">سجل المحادثات الذكية</h2>
@@ -958,9 +958,9 @@ const AdvisorChat: React.FC<AdvisorChatProps> = ({ profile, plan, onClose, onUpg
            </button>
          </div>
          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6 text-primary mt-12">
-            <MessageSquare size={40} />
+            <Compass size={40} />
          </div>
-         <h2 className="text-2xl font-bold mb-4">المستشار المخصص</h2>
+         <h2 className="text-2xl font-bold mb-4">المرشد المخصص</h2>
          <p className="text-text-secondary text-center max-w-md mb-8 leading-relaxed">
            ابدأ نقاشاً حول أي جانب من جوانب مشروعك. يمكنك إنشاء عدة محادثات منظمة بحسب الموضوعات المختلفة!
          </p>

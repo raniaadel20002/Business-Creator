@@ -137,7 +137,7 @@ export async function runAiTask(type: string, payload: any, userId: string): Pro
         key = process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || (process.env as any).geminiApiKey;
       }
       const gAI = new GoogleGenAI(key ? { apiKey: key } : {});
-      const modelsToTry = ["gemini-3.5-flash", "gemini-flash-latest", "gemini-3.7-flash", "gemini-flash-lite-latest", "gemini-3.1-flash-lite", "gemini-2.5-flash"];
+      const modelsToTry = ["gemini-3.5-flash", "gemini-3.7-flash", "gemini-flash-latest", "gemini-flash-lite-latest", "gemini-3.1-flash-lite", "gemini-2.5-flash"];
       let chatRes: string | null = null;
       let lastErr: any = null;
 
@@ -147,7 +147,7 @@ export async function runAiTask(type: string, payload: any, userId: string): Pro
             model: modelName,
             contents: payload.chatHistory || [],
             config: {
-              systemInstruction: payload.systemInstruction || "أنت المستشار الريادي الذكي لمنصة Business Creator AI.",
+              systemInstruction: payload.systemInstruction || "أنت المرشد الريادي الذكي لمنصة Business Creator AI.",
               temperature: 0.7,
             }
           });

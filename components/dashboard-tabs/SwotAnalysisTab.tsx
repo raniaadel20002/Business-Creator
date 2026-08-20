@@ -102,7 +102,7 @@ const SwotAnalysisTab: React.FC<SwotAnalysisTabProps> = ({
         {onConsultAdvisor && (
           <AdvisorCTA 
             icon={ShieldAlert}
-            question="اسأل المستشار كيف تحول نقاط ضعفك ومخاطرك إلى مكاسب؟"
+            question="اسأل المرشد كيف تحول نقاط ضعفك ومخاطرك إلى مكاسب؟"
             onConsult={onConsultAdvisor}
             isFreeUser={isFreeUser}
           />

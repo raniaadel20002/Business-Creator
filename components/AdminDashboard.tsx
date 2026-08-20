@@ -43,6 +43,7 @@ import {
   Lightbulb,
   MessageSquare,
   Radio,
+  Compass,
   ExternalLink,
   Smartphone,
   MapPin,
@@ -935,10 +936,10 @@ const AdminDashboard: React.FC = () => {
                 bg: 'bg-pink-400/10' 
               },
               { 
-                label: 'رسائل المستشار', 
+                label: 'رسائل المرشد', 
                 value: (stats?.totalMessagesCount ?? 0).toLocaleString(), 
-                subtitle: 'رسالة ومحادثة استشارية',
-                icon: MessageSquare, 
+                subtitle: 'رسالة ومحادثة إرشادية',
+                icon: Compass, 
                 color: 'text-cyan-400', 
                 bg: 'bg-cyan-400/10' 
               },
@@ -1029,7 +1030,7 @@ const AdminDashboard: React.FC = () => {
                   <th className="px-3 py-3">الباقة والرصيد</th>
                   <th className="px-3 py-3 text-center">💡 المشاريع</th>
                   <th className="px-3 py-3 text-center">🎨 الشعارات</th>
-                  <th className="px-3 py-3 text-center">💬 رسائل المستشار</th>
+                  <th className="px-3 py-3 text-center">🧭 رسائل المرشد</th>
                   <th className="px-3 py-3 text-center">⏱️ وقت آخر دخول</th>
                   <th className="px-3 py-3 text-center">🚪 آخر خروج / الحالة</th>
                   <th className="px-3 py-3 text-center">الإجراءات والتحكم</th>
@@ -1740,8 +1741,8 @@ const AdminDashboard: React.FC = () => {
 
                 <div className="bg-white/5 p-2.5 rounded-xl border border-white/5 text-center">
                   <div className="flex items-center justify-center gap-1 text-cyan-400 text-[10px] font-bold mb-0.5">
-                    <MessageSquare size={12} />
-                    <span>رسائل المستشار</span>
+                    <Compass size={12} />
+                    <span>رسائل المرشد</span>
                   </div>
                   <span className="text-base font-black text-white">{selectedUser.messagesCount || 0}</span>
                 </div>
@@ -1791,7 +1792,7 @@ const AdminDashboard: React.FC = () => {
                 { id: 'overview', label: 'ملخص الحساب والتحكم', icon: Users },
                 { id: 'questionnaire', label: 'استبيان العضو', icon: Database },
                 { id: 'projects', label: `المشاريع (${selectedUser.userProjects?.length || 0})`, icon: Briefcase },
-                { id: 'chats', label: `المستشار الذكي (${selectedUser.userChats?.length || 0})`, icon: MessageCircle },
+                { id: 'chats', label: `المرشد الذكي (${selectedUser.userChats?.length || 0})`, icon: Compass },
                 { id: 'logs', label: `سجل النشاط (${selectedUser.userLogs?.length || 0})`, icon: Activity }
               ].map(tab => (
                 <button
@@ -1951,8 +1952,8 @@ const AdminDashboard: React.FC = () => {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h4 className="font-bold text-white text-xs flex items-center gap-1.5">
-                      <MessageCircle size={13} className="text-[#FF7E01]" />
-                      محادثات وجلسات المستشار الذكي ({selectedUser.userChats?.length || 0})
+                      <Compass size={13} className="text-[#FF7E01]" />
+                      محادثات وجلسات المرشد الذكي ({selectedUser.userChats?.length || 0})
                     </h4>
                   </div>
 

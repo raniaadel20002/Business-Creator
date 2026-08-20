@@ -1,7 +1,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { UserData, BusinessPlan, RejectionReport, ValidationResult, ExecutionBlueprint } from "../types.js";
 import { parseCapitalDetails } from "./prompts/projectPrompts.js";
-import { createGeminiClient } from "./geminiClient.js";
+import { createGeminiClient, getModelFallbackList } from "./geminiClient.js";
 
 
 interface ProjectTypeClassification {
@@ -436,45 +436,49 @@ ${failureGates && failureGates.length > 0 ? `- أسباب فشل الفكرة ا
 
 أخرج النتيجة حصرياً كمصفوفة JSON صالحة مطابقة للهيكل المطلوب. لا تضف أي نص حواري قبل أو بعد JSON.`;
 
-    try {
-      console.log("[IdeaValidationEngine] Calling Gemini to generate custom alternative ideas...");
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-        config: {
-          systemInstruction: "أنت مستشار مبتكر في مجال الأعمال متخصص في السوق المصري. أخرج حصرياً مصفوفة JSON صالحة مطابقة لهيكل الاستجابة المطلوب. يجب كتابة جميع النصوص داخل حقول JSON (projectName, concept, rationale) بالكامل باللهجة المصرية العامية باستخدام مصطلحات تجارية بسيطة وواضحة وشائعة وخالية من المصطلحات المعقدة. لا تكتب أي غلاف ماركداون أو نصوص شارحة خارج JSON.",
-          responseMimeType: "application/json",
-          temperature: 0.8,
-          topP: 0.95,
-          responseSchema: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                projectName: { type: Type.STRING },
-                concept: { type: Type.STRING },
-                rationale: { type: Type.STRING }
-              },
-              required: ["projectName", "concept", "rationale"]
+    const modelsToTry = getModelFallbackList("gemini-flash-latest");
+
+    for (const modelName of modelsToTry) {
+      try {
+        console.log(`[IdeaValidationEngine] Calling Gemini model ${modelName} for custom alternative ideas...`);
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: prompt,
+          config: {
+            systemInstruction: "أنت مستشار مبتكر في مجال الأعمال متخصص في السوق المصري. أخرج حصرياً مصفوفة JSON صالحة مطابقة لهيكل الاستجابة المطلوب. يجب كتابة جميع النصوص داخل حقول JSON (projectName, concept, rationale) بالكامل باللهجة المصرية العامية باستخدام مصطلحات تجارية بسيطة وواضحة وشائعة وخالية من المصطلحات المعقدة. لا تكتب أي غلاف ماركداون أو نصوص شارحة خارج JSON.",
+            responseMimeType: "application/json",
+            temperature: 0.8,
+            topP: 0.95,
+            responseSchema: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  projectName: { type: Type.STRING },
+                  concept: { type: Type.STRING },
+                  rationale: { type: Type.STRING }
+                },
+                required: ["projectName", "concept", "rationale"]
+              }
             }
           }
-        }
-      });
+        });
 
-      const text = response.text ? response.text.trim() : "";
-      if (text) {
-        let cleanedText = text;
-        if (cleanedText.startsWith("```json")) {
-          cleanedText = cleanedText.replace(/^```json\n?/, "").replace(/\n?```$/, "");
+        const text = response.text ? response.text.trim() : "";
+        if (text) {
+          let cleanedText = text;
+          if (cleanedText.startsWith("```json")) {
+            cleanedText = cleanedText.replace(/^```json\n?/, "").replace(/\n?```$/, "");
+          }
+          const ideas = JSON.parse(cleanedText);
+          if (Array.isArray(ideas) && ideas.length > 0) {
+            console.log(`[IdeaValidationEngine] Successfully generated alternative ideas via ${modelName}.`);
+            return ideas.slice(0, 3);
+          }
         }
-        const ideas = JSON.parse(cleanedText);
-        if (Array.isArray(ideas) && ideas.length > 0) {
-          console.log("[IdeaValidationEngine] Successfully generated alternative ideas via Gemini.");
-          return ideas.slice(0, 3);
-        }
+      } catch (e: any) {
+        console.warn(`[IdeaValidationEngine] Model ${modelName} failed: ${e?.message || e}. Trying next model...`);
       }
-    } catch (e) {
-      console.error("[IdeaValidationEngine] Error during generation of alternative ideas:", e);
     }
 
     console.warn("[IdeaValidationEngine] Falling back to standard alternatives.");
