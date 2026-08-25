@@ -177,7 +177,7 @@ Generate the complete, agency-grade Logo Design System now according to the syst
     try {
       console.log(`[Logo Service] Requesting complete Logo System from Gemini for project: ${projectName}...`);
       const response = await this.generateContentWithFallback({
-        model: "gemini-flash-latest",
+        model: "gemini-flash-lite-latest",
         contents: userPrompt,
         config: {
           systemInstruction: systemPrompt,

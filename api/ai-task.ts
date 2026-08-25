@@ -21,7 +21,7 @@ async function isUserPro(userId?: string): Promise<boolean> {
   return false;
 }
 
-export default async function handler(req: Request, res: Response) {
+export default async function handler(req: any, res: any) {
   // 1. Handle CORS Preflight
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');

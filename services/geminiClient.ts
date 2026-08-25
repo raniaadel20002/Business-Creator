@@ -4,6 +4,22 @@ const DEFAULT_GEMINI_KEY = "AIzaSyBMEPQ7zM9akR0ht5AQryrCPQ65asqpZog";
 const COOLDOWN_DURATION_MS = 2 * 60 * 1000; // 2 minutes (120 seconds)
 
 /**
+ * Validates Google Gemini API keys supporting both classic (AIzaSy...) and modern (AQ...) formats.
+ */
+function isValidGeminiApiKey(key: string): boolean {
+  if (!key || typeof key !== 'string') return false;
+  const trimmed = key.trim();
+  // Valid Google AI Studio keys:
+  // 1. Classic prefix: AIzaSy... (typically 39 chars)
+  // 2. Modern updated prefix: AQ... or AQ.Ab8...
+  // 3. General length and character validity check (letters, digits, underscores, dashes, dots)
+  if (trimmed.length >= 25 && /^[A-Za-z0-9_\-\.]+$/.test(trimmed)) {
+    return true;
+  }
+  return false;
+}
+
+/**
  * Parses keys from environment strings (comma, semicolon, or newline-separated).
  */
 function extractKeysFromEnv(): string[] {
@@ -31,8 +47,8 @@ function extractKeysFromEnv(): string[] {
     const parts = raw.split(/[,;\n\r]+/);
     for (let part of parts) {
       part = part.trim().replace(/^["']|["']$/g, ""); // strip quotes and whitespace
-      // Validate that it is a valid Google AI Studio Gemini API Key (starts with AIzaSy)
-      if (part && part.startsWith("AIzaSy") && !keys.includes(part)) {
+      // Validate that it is a valid Google AI Studio Gemini API Key (AIzaSy, AQ.Ab8, etc.)
+      if (isValidGeminiApiKey(part) && !keys.includes(part)) {
         keys.push(part);
       }
     }
@@ -215,18 +231,16 @@ export async function executeWithGeminiPool<T>(
 }
 
 const FALLBACK_GEMINI_MODELS = [
+  "gemini-flash-lite-latest",
+  "gemini-flash-latest",
+  "gemini-2.5-flash",
   "gemini-3.5-flash",
   "gemini-3.7-flash",
-  "gemini-flash-latest",
-  "gemini-flash-lite-latest",
-  "gemini-3.1-flash-lite",
-  "gemini-2.5-flash",
+  "gemini-pro-latest",
 ];
 
 export function getModelFallbackList(primaryModel?: string): string[] {
-  const preferred = (primaryModel && primaryModel !== "gemini-2.5-flash" && primaryModel !== "gemini-2.0-flash") 
-    ? primaryModel 
-    : "gemini-3.5-flash";
+  const preferred = primaryModel || "gemini-flash-lite-latest";
   const list = [preferred, ...FALLBACK_GEMINI_MODELS].filter(Boolean) as string[];
   return Array.from(new Set(list));
 }
