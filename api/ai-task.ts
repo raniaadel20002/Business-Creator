@@ -1,7 +1,7 @@
-import { createGeminiClient, getModelFallbackList, executeWithGeminiPool } from '../services/geminiClient.js';
-import { AiBusinessService } from '../services/geminiService.js';
-import { LogoService } from '../services/logoService.js';
-import { getSupabaseAdmin } from '../services/supabaseAdmin.js';
+import { createGeminiClient, getModelFallbackList, executeWithGeminiPool } from '../server/services/ai/geminiClient.js';
+import { AiBusinessService } from '../server/services/ai/geminiService.js';
+import { LogoService } from '../server/services/ai/logoService.js';
+import { getSupabaseAdmin } from '../server/services/database/supabaseAdmin.js';
 
 async function isUserPro(userId?: string): Promise<boolean> {
   if (!userId) return false;
@@ -50,9 +50,13 @@ export default async function handler(req: any, res: any) {
   const { type, payload, userId, stream } = body || {};
   const isStreamingRequested = stream === true || req.headers?.accept?.includes('text/event-stream');
 
-  // Normalize Gemini Key
+  // Validate Gemini Key exists (server-side only)
   if (!process.env.GEMINI_API_KEY) {
-    process.env.GEMINI_API_KEY = process.env.VITE_GEMINI_API_KEY || process.env.geminiApiKey || "AIzaSyBMEPQ7zM9akR0ht5AQryrCPQ65asqpZog";
+    console.error('[AI Task Handler] GEMINI_API_KEY not configured');
+    return res.status(500).json({ 
+      success: false, 
+      error: 'خطأ في إعدادات الخادم. يرجى التواصل مع الدعم الفني.' 
+    });
   }
 
   console.log(`[AI Task Handler] Processing task type: ${type} for user: ${userId || 'anonymous'} (Streaming: ${isStreamingRequested})`);

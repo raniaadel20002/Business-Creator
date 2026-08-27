@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import crypto from 'crypto';
-import { getSupabaseAdmin } from '../services/supabaseAdmin.js';
+import { getSupabaseAdmin } from '../server/services/database/supabaseAdmin.js';
 
 export default async function paymobWebhookHandler(req: Request, res: Response) {
   try {
