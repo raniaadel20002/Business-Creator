@@ -14,8 +14,8 @@ import {
   Clock,
   ArrowRight
 } from 'lucide-react';
-import { useAuth } from './AuthContext';
-import { UserNotification } from '../types';
+import { useAuth } from '../../auth/context/AuthContext';
+import { UserNotification } from '../../../types/types';
 import { 
   subscribeToNotifications, 
   markNotificationAsRead, 

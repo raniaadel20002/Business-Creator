@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from './AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { User, Settings, LogOut, Save, Sparkles, Edit3, BadgeCheck, Zap } from 'lucide-react';
-import { logOut } from '../supabase';
+import { logOut } from '../../../services/supabase';
 import { getDailyGenerationStatus } from '../../../types/types';
-import { InsufficientTokensCard } from '../../../../components/InsufficientTokensCard';
+import { InsufficientTokensCard } from '../../payments/components/InsufficientTokensCard';
 
 interface ProfileProps {
   onLogout: () => void;

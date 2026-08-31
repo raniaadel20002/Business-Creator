@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase, handleSupabaseError } from '../supabase';
+import { supabase, handleSupabaseError } from '../../../services/supabase';
 import { 
   Users, 
   Briefcase, 
@@ -49,9 +49,9 @@ import {
   MapPin,
   CheckCircle
 } from 'lucide-react';
-import { ActivityLog, BusinessPlan, UserProfile } from '../types';
-import { createNotification } from '../services/notificationService';
-import { adminUpgradeUserAccount } from '../server/services/payments/tempPaymentService';
+import { ActivityLog, BusinessPlan, UserProfile } from '../../../types/types';
+import { createNotification } from '../../../services/notificationService';
+import { adminUpgradeUserAccount } from '../../../../server/services/payments/tempPaymentService';
 import { ErrorTracker } from '../server/services/telemetry/errorTracker';
 import {
   Chart as ChartJS,

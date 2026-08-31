@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Send, MessageCircle } from 'lucide-react';
-import { supabase } from '../supabase';
-import { useAuth } from './AuthContext';
-import { createNotification } from '../services/notificationService';
+import { supabase } from '../../../services/supabase';
+import { useAuth } from '../../auth/context/AuthContext';
+import { createNotification } from '../../../services/notificationService';
 import { sendFeedbackReceivedEmail } from '../server/services/email/emailService';
 
 export default function Feedback() {

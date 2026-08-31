@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { LogIn, BadgeCheck } from 'lucide-react';
-import { signInWithGoogle } from '../supabase';
-import { supabase } from '../supabase';
-import { useAuth } from './AuthContext';
-import Logo from './Logo';
+import { signInWithGoogle } from '../../../services/supabase';
+import { supabase } from '../../../services/supabase';
+import { useAuth } from '../context/AuthContext';
+import Logo from '../../../components/shared/Logo';
 
 const Login: React.FC<{ onLogin: () => void, message?: string }> = ({ onLogin, message }) => {
   const [error, setError] = useState<string | null>(null);

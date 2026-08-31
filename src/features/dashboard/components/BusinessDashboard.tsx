@@ -8,22 +8,22 @@ const svgToDataUri = (svg?: string): string => {
   const clean = DOMPurify.sanitize(svg, { USE_PROFILES: { svg: true, svgFilters: true } });
   return `data:image/svg+xml;utf8,${encodeURIComponent(clean)}`;
 };
-import { useAuth } from './AuthContext';
-import { supabase, runAiTask } from '../supabase';
+import { useAuth } from '../../auth/context/AuthContext';
+import { supabase, runAiTask } from '../../../services/supabase';
 import { sendExecutionDecisionEmail } from '../../../../server/services/email/emailService';
-import { createNotification } from '../services/notificationService';
-import AdvisorChat from '../../../../components/AdvisorChat';
-import { AdvisorCTA } from '../../../../components/AdvisorCTA';
-import { getChallengeAdvice } from '../services/challengeAdviceService';
-import SwotAnalysisTab from '../../../../components/dashboard-tabs/SwotAnalysisTab';
-import InvestmentTab from '../../../../components/dashboard-tabs/InvestmentTab';
-import ResourcesTab from '../../../../components/dashboard-tabs/ResourcesTab';
-import MarketAnalysisTab from '../../../../components/dashboard-tabs/MarketAnalysisTab';
-import ValidationTab from '../../../../components/dashboard-tabs/ValidationTab';
-import TargetAudienceTab from '../../../../components/dashboard-tabs/TargetAudienceTab';
-import BusinessStrategyTab from '../../../../components/dashboard-tabs/BusinessStrategyTab';
-import ExecutionGuideTab from '../../../../components/dashboard-tabs/ExecutionGuideTab';
-import FinancialsTab from '../../../../components/dashboard-tabs/FinancialsTab';
+import { createNotification } from '../../../services/notificationService';
+import AdvisorChat from '../../advisor/components/AdvisorChat';
+import { AdvisorCTA } from '../../advisor/components/AdvisorCTA';
+import { getChallengeAdvice } from '../../../../server/services/ai/challengeAdvice';
+import SwotAnalysisTab from './tabs/SwotAnalysisTab';
+import InvestmentTab from './tabs/InvestmentTab';
+import ResourcesTab from './tabs/ResourcesTab';
+import MarketAnalysisTab from './tabs/MarketAnalysisTab';
+import ValidationTab from './tabs/ValidationTab';
+import TargetAudienceTab from './tabs/TargetAudienceTab';
+import BusinessStrategyTab from './tabs/BusinessStrategyTab';
+import ExecutionGuideTab from './tabs/ExecutionGuideTab';
+import FinancialsTab from './tabs/FinancialsTab';
 import { 
   Briefcase, 
   Palette, 
@@ -76,11 +76,11 @@ import {
   Phone,
   Building
 } from 'lucide-react';
-import { MarketingStrategyTab } from '../../../../components/dashboard-tabs/MarketingStrategyTab';
-import { CompetitorsAnalysisTab } from '../../../../components/dashboard-tabs/CompetitorsAnalysisTab';
-import { BusinessModelCanvasTab } from '../../../../components/dashboard-tabs/BusinessModelCanvasTab';
-import { FormattedText, cleanText } from './FormattedText';
-import { InsufficientTokensCard } from '../../../../components/InsufficientTokensCard';
+import { MarketingStrategyTab } from './tabs/MarketingStrategyTab';
+import { CompetitorsAnalysisTab } from './tabs/CompetitorsAnalysisTab';
+import { BusinessModelCanvasTab } from './tabs/BusinessModelCanvasTab';
+import { FormattedText, cleanText } from '../../../components/shared/FormattedText';
+import { InsufficientTokensCard } from '../../payments/components/InsufficientTokensCard';
 
 interface BusinessDashboardProps {
   plan: BusinessPlan;

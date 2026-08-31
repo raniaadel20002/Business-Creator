@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { SubscriptionTier } from '../../../types/types';
-import { useAuth } from './AuthContext';
+import { useAuth } from '../../auth/context/AuthContext';
 
 interface FeatureItem {
   text: string;

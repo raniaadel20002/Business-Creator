@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { UserData, Step, getDailyGenerationStatus, TOKEN_COSTS } from '../types';
-import { GOVERNORATES } from '../constants';
-import CustomSelect from './CustomSelect';
+import { UserData, Step, getDailyGenerationStatus, TOKEN_COSTS } from '../../../types/types';
+import { GOVERNORATES } from '../../../constants/constants';
+import CustomSelect from '../../../components/shared/CustomSelect';
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Check, User, DollarSign, Brain, Settings, Lightbulb, Heart, Briefcase, FileText, Info, Zap, X, MapPin, ArrowDown } from 'lucide-react';
-import { useAuth } from './AuthContext';
+import { useAuth } from '../../auth/context/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { InsufficientTokensCard } from './InsufficientTokensCard';
+import { InsufficientTokensCard } from '../../payments/components/InsufficientTokensCard';
 
 interface ModelItemConfig {
   name: string;

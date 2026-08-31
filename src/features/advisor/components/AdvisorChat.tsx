@@ -4,11 +4,11 @@ import {
   Send, Compass, User, Loader2, MessageSquare, Trash2, Sparkles, RefreshCw, Info, X, MoreVertical, History, Plus, ChevronRight, Pin, PinOff, Square, Copy, Check, ArrowUp, ArrowDown, ArrowLeft,
   Lightbulb, Search, Users, Briefcase, Megaphone
 } from 'lucide-react';
-import { UserProfile, BusinessPlan, ChatSession, ChatMessage, TOKEN_COSTS } from '../types';
-import { supabase, runAiTask, handleSupabaseError } from '../supabase';
-import { useAuth } from './AuthContext';
-import { FormattedText, isArabicText } from './FormattedText';
-import { InsufficientTokensCard } from './InsufficientTokensCard';
+import { UserProfile, BusinessPlan, ChatSession, ChatMessage, TOKEN_COSTS } from '../../../types/types';
+import { supabase, runAiTask, handleSupabaseError } from '../../../services/supabase';
+import { useAuth } from '../../auth/context/AuthContext';
+import { FormattedText, isArabicText } from '../../../components/shared/FormattedText';
+import { InsufficientTokensCard } from '../../payments/components/InsufficientTokensCard';
 
 const LOADING_STEPS = [
   { icon: Lightbulb },

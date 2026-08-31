@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { History, ArrowRight, Briefcase, Calendar, Trash2, Eye, Edit2, Save, X, Filter, SortAsc, Star, Zap, PlayCircle } from 'lucide-react';
-import { useAuth } from './AuthContext';
-import CustomSelect from './CustomSelect';
-import { supabase, handleSupabaseError } from '../supabase';
+import { useAuth } from '../../auth/context/AuthContext';
+import CustomSelect from '../../../components/shared/CustomSelect';
+import { supabase, handleSupabaseError } from '../../../services/supabase';
 import { SavedProject } from '../../../types/types';
 
 interface SavedPlansProps {

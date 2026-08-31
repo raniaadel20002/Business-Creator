@@ -1,5 +1,5 @@
-import { supabase } from '../supabase';
-import { UserNotification } from '../types';
+import { supabase } from './supabase';
+import { UserNotification } from '../types/types';
 
 const LOCAL_STORAGE_KEY_PREFIX = 'bc_notifications_v2_';
 

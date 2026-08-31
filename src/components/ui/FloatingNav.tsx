@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Home, Lightbulb, FolderOpen, Menu, User, LogIn, LayoutDashboard, Building2, Layers, BadgeCheck, Coins } from 'lucide-react';
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'motion/react';
-import { useAuth } from './AuthContext';
-import Logo from './Logo';
+import { useAuth } from '../../features/auth/context/AuthContext';
+import Logo from '../shared/Logo';
 
 interface FloatingNavProps {
   currentView: string;

@@ -12,7 +12,7 @@ import {
   getWhatsAppPaymentUrl, 
   sendPaymentRequestToAdmin 
 } from '../server/services/payments/tempPaymentService';
-import { useAuth } from './AuthContext';
+import { useAuth } from '../../auth/context/AuthContext';
 
 interface TempPaymentModalProps {
   isOpen: boolean;
