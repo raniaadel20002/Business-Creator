@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './src/app/App';
 import { AuthProvider } from './src/features/auth/context/AuthContext';
-import { ErrorTracker } from './server/services/telemetry/errorTracker';
+import { ErrorTracker } from './src/services/errorTracker';
 
 // Initialize global real-time error telemetry
 ErrorTracker.initGlobalHandlers();

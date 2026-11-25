@@ -6,9 +6,11 @@ interface ToastMessageProps {
   message: string | null;
   onClose: () => void;
   type?: 'success' | 'error';
+  actionLabel?: string;
+  onAction?: () => void;
 }
 
-const ToastMessage: React.FC<ToastMessageProps> = ({ message, onClose, type = 'success' }) => {
+const ToastMessage: React.FC<ToastMessageProps> = ({ message, onClose, type = 'success', actionLabel, onAction }) => {
   const isQuotaError = message?.includes("Quota exceeded") || 
                        message?.includes("Quota limit exceeded") || 
                        message?.includes("quota") || 
@@ -74,6 +76,14 @@ const ToastMessage: React.FC<ToastMessageProps> = ({ message, onClose, type = 's
                 <p className="text-sm md:text-base">{message}</p>
               )}
             </div>
+            {actionLabel && onAction && (
+              <button
+                onClick={onAction}
+                className="text-xs font-semibold text-primary hover:underline flex-shrink-0 px-1"
+              >
+                {actionLabel}
+              </button>
+            )}
             <button 
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100 flex-shrink-0"

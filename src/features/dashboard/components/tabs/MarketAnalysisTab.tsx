@@ -1,7 +1,7 @@
 import React from 'react';
 import { LineChart, PieChart, TrendingUp, Target, ShieldCheck, Briefcase, FileText } from 'lucide-react';
 import { BusinessPlan } from '../../../../types/types';
-import { FormattedText } from '../../../../../components/shared/FormattedText';
+import { FormattedText } from '../../../../components/shared/FormattedText';
 import { AdvisorCTA } from '../../../advisor/components/AdvisorCTA';
 
 interface MarketAnalysisTabProps {

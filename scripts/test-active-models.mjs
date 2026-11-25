@@ -1,7 +1,11 @@
 import { loadEnv } from './load-env.mjs';
 
 const envVars = loadEnv();
-const rawKeys = process.env.VITE_GEMINI_API_KEY || envVars.VITE_GEMINI_API_KEY || envVars.GEMINI_API_KEY || "AIzaSyBMEPQ7zM9akR0ht5AQryrCPQ65asqpZog";
+const rawKeys = process.env.VITE_GEMINI_API_KEY || envVars.VITE_GEMINI_API_KEY || envVars.GEMINI_API_KEY;
+if (!rawKeys) {
+  console.error('No Gemini API key found in environment. Set GEMINI_API_KEY or VITE_GEMINI_API_KEY.');
+  process.exit(1);
+}
 const keys = rawKeys.split(/[,;\n\r]+/).map(k => k.trim().replace(/^["']|["']$/g, '')).filter(k => k.length >= 25);
 
 console.log(`Loaded ${keys.length} keys in test script.`);

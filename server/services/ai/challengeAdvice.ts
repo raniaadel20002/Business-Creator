@@ -1,4 +1,4 @@
-import { ChallengeAdviceItem } from '../types';
+import { ChallengeAdviceItem } from '../types.js';
 
 export const getChallengeAdvice = (challenges: string, projectName?: string): ChallengeAdviceItem[] => {
   const lowerChallenges = (challenges || '').toLowerCase();

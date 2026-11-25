@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { UserData, Step, getDailyGenerationStatus, TOKEN_COSTS } from '../../../types/types';
+import { UserData, Step, TOKEN_COSTS } from '../../../types/types';
+import { getDailyGenerationStatus } from '../../../hooks/useGenerationStatus';
 import { GOVERNORATES } from '../../../constants/constants';
 import CustomSelect from '../../../components/shared/CustomSelect';
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Check, User, DollarSign, Brain, Settings, Lightbulb, Heart, Briefcase, FileText, Info, Zap, X, MapPin, ArrowDown } from 'lucide-react';

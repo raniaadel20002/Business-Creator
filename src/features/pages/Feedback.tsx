@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Send, MessageCircle } from 'lucide-react';
-import { supabase } from '../../../services/supabase';
-import { useAuth } from '../../auth/context/AuthContext';
-import { createNotification } from '../../../services/notificationService';
-import { sendFeedbackReceivedEmail } from '../server/services/email/emailService';
+import { supabase } from '../../services/supabase';
+import { useAuth } from '../auth/context/AuthContext';
+import { createNotification } from '../../services/notificationService';
+import { sendFeedbackReceivedEmail } from '../../api/emailClient';
 
 export default function Feedback() {
   const [feedbackText, setFeedbackText] = useState('');

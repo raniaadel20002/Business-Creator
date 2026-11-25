@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import DOMPurify from 'dompurify';
 import { BusinessPlan, TOKEN_COSTS } from '../../../types/types';
 
@@ -10,20 +10,11 @@ const svgToDataUri = (svg?: string): string => {
 };
 import { useAuth } from '../../auth/context/AuthContext';
 import { supabase, runAiTask } from '../../../services/supabase';
-import { sendExecutionDecisionEmail } from '../../../../server/services/email/emailService';
+import { sendExecutionDecisionEmail } from '../../../api/emailClient';
 import { createNotification } from '../../../services/notificationService';
 import AdvisorChat from '../../advisor/components/AdvisorChat';
 import { AdvisorCTA } from '../../advisor/components/AdvisorCTA';
-import { getChallengeAdvice } from '../../../../server/services/ai/challengeAdvice';
-import SwotAnalysisTab from './tabs/SwotAnalysisTab';
-import InvestmentTab from './tabs/InvestmentTab';
-import ResourcesTab from './tabs/ResourcesTab';
-import MarketAnalysisTab from './tabs/MarketAnalysisTab';
-import ValidationTab from './tabs/ValidationTab';
-import TargetAudienceTab from './tabs/TargetAudienceTab';
-import BusinessStrategyTab from './tabs/BusinessStrategyTab';
-import ExecutionGuideTab from './tabs/ExecutionGuideTab';
-import FinancialsTab from './tabs/FinancialsTab';
+import { getChallengeAdvice } from '../../../services/challengeAdvice';
 import { 
   Briefcase, 
   Palette, 
@@ -76,11 +67,22 @@ import {
   Phone,
   Building
 } from 'lucide-react';
-import { MarketingStrategyTab } from './tabs/MarketingStrategyTab';
-import { CompetitorsAnalysisTab } from './tabs/CompetitorsAnalysisTab';
-import { BusinessModelCanvasTab } from './tabs/BusinessModelCanvasTab';
 import { FormattedText, cleanText } from '../../../components/shared/FormattedText';
 import { InsufficientTokensCard } from '../../payments/components/InsufficientTokensCard';
+
+// Dashboard tabs — lazy-loaded so only the active tab's code is fetched on demand
+const SwotAnalysisTab = lazy(() => import('./tabs/SwotAnalysisTab'));
+const InvestmentTab = lazy(() => import('./tabs/InvestmentTab'));
+const ResourcesTab = lazy(() => import('./tabs/ResourcesTab'));
+const MarketAnalysisTab = lazy(() => import('./tabs/MarketAnalysisTab'));
+const ValidationTab = lazy(() => import('./tabs/ValidationTab'));
+const TargetAudienceTab = lazy(() => import('./tabs/TargetAudienceTab'));
+const BusinessStrategyTab = lazy(() => import('./tabs/BusinessStrategyTab'));
+const ExecutionGuideTab = lazy(() => import('./tabs/ExecutionGuideTab'));
+const FinancialsTab = lazy(() => import('./tabs/FinancialsTab'));
+const MarketingStrategyTab = lazy(() => import('./tabs/MarketingStrategyTab').then(m => ({ default: m.MarketingStrategyTab })));
+const CompetitorsAnalysisTab = lazy(() => import('./tabs/CompetitorsAnalysisTab').then(m => ({ default: m.CompetitorsAnalysisTab })));
+const BusinessModelCanvasTab = lazy(() => import('./tabs/BusinessModelCanvasTab').then(m => ({ default: m.BusinessModelCanvasTab })));
 
 interface BusinessDashboardProps {
   plan: BusinessPlan;
@@ -1307,50 +1309,73 @@ const BusinessDashboard: React.FC<BusinessDashboardProps> = ({ plan, activeTab, 
         )}
 
           {activeTab === 'marketAnalysis' && (
+            <Suspense fallback={<div className="flex items-center justify-center py-20 text-gray-400 text-sm">جاري التحميل...</div>}>
             <MarketAnalysisTab plan={plan} renderTabNavigation={renderTabNavigation} onConsultAdvisor={handleAdvisorClick} isFreeUser={isFreeUser} />
+            </Suspense>
           )}
 
           {activeTab === 'validation' && (
+            <Suspense fallback={<div className="flex items-center justify-center py-20 text-gray-400 text-sm">جاري التحميل...</div>}>
             <ValidationTab plan={plan} renderTabNavigation={renderTabNavigation} onConsultAdvisor={handleAdvisorClick} isFreeUser={isFreeUser} />
+            </Suspense>
           )}
 
           {activeTab === 'targetAudience' && (
+            <Suspense fallback={<div className="flex items-center justify-center py-20 text-gray-400 text-sm">جاري التحميل...</div>}>
             <TargetAudienceTab plan={plan} renderTabNavigation={renderTabNavigation} onConsultAdvisor={handleAdvisorClick} isFreeUser={isFreeUser} />
+            </Suspense>
           )}
 
           {activeTab === 'competitors' && (
+            <Suspense fallback={<div className="flex items-center justify-center py-20 text-gray-400 text-sm">جاري التحميل...</div>}>
             <CompetitorsAnalysisTab plan={plan} renderTabNavigation={renderTabNavigation} onConsultAdvisor={handleAdvisorClick} isFreeUser={isFreeUser} />
+            </Suspense>
           )}
 
           {activeTab === 'businessStrategy' && (
+            <Suspense fallback={<div className="flex items-center justify-center py-20 text-gray-400 text-sm">جاري التحميل...</div>}>
             <BusinessStrategyTab plan={plan} renderTabNavigation={renderTabNavigation} onConsultAdvisor={handleAdvisorClick} isFreeUser={isFreeUser} />
+            </Suspense>
           )}
 
           {activeTab === 'businessModel' && (
+            <Suspense fallback={<div className="flex items-center justify-center py-20 text-gray-400 text-sm">جاري التحميل...</div>}>
             <BusinessModelCanvasTab plan={plan} renderTabNavigation={renderTabNavigation} onConsultAdvisor={handleAdvisorClick} isFreeUser={isFreeUser} />
+            </Suspense>
           )}
 
           {activeTab === 'execution' && (
+            <Suspense fallback={<div className="flex items-center justify-center py-20 text-gray-400 text-sm">جاري التحميل...</div>}>
             <ExecutionGuideTab plan={plan} renderTabNavigation={renderTabNavigation} onConsultAdvisor={handleAdvisorClick} isFreeUser={isFreeUser} />
+            </Suspense>
           )}
 
           {activeTab === 'financials' && (
+            <Suspense fallback={<div className="flex items-center justify-center py-20 text-gray-400 text-sm">جاري التحميل...</div>}>
              <FinancialsTab plan={plan} renderTabNavigation={renderTabNavigation} onConsultAdvisor={handleAdvisorClick} isFreeUser={isFreeUser} />
+            </Suspense>
           )}
 
           {activeTab === 'marketing' && (
+            <Suspense fallback={<div className="flex items-center justify-center py-20 text-gray-400 text-sm">جاري التحميل...</div>}>
             <MarketingStrategyTab plan={plan} renderTabNavigation={renderTabNavigation} onConsultAdvisor={handleAdvisorClick} isFreeUser={isFreeUser} />
+            </Suspense>
           )}
 
           {activeTab === 'swot' && (
+            <Suspense fallback={<div className="flex items-center justify-center py-20 text-gray-400 text-sm">جاري التحميل...</div>}>
             <SwotAnalysisTab plan={plan} renderTabNavigation={renderTabNavigation} onConsultAdvisor={handleAdvisorClick} isFreeUser={isFreeUser} />
+            </Suspense>
           )}
 
           {activeTab === 'investment' && (
+            <Suspense fallback={<div className="flex items-center justify-center py-20 text-gray-400 text-sm">جاري التحميل...</div>}>
             <InvestmentTab plan={plan} renderTabNavigation={renderTabNavigation} onConsultAdvisor={handleAdvisorClick} isFreeUser={isFreeUser} />
+            </Suspense>
           )}
 
           {activeTab === 'resources' && (
+            <Suspense fallback={<div className="flex items-center justify-center py-20 text-gray-400 text-sm">جاري التحميل...</div>}>
             <ResourcesTab
               plan={plan}
               profile={profile}
@@ -1360,6 +1385,7 @@ const BusinessDashboard: React.FC<BusinessDashboardProps> = ({ plan, activeTab, 
               onConsultAdvisor={handleAdvisorClick}
               isFreeUser={isFreeUser}
             />
+            </Suspense>
           )}
 
           {activeTab === 'advisor' && profile && (

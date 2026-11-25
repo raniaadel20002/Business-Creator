@@ -1,7 +1,7 @@
 import React from 'react';
 import { Briefcase, Users, CheckSquare, Gift, Heart, Database, Truck, Tags, Coins } from 'lucide-react';
 import { BusinessPlan } from '../../../../types/types';
-import { cleanText } from '../../../../../components/shared/FormattedText';
+import { cleanText } from '../../../../components/shared/FormattedText';
 import { AdvisorCTA } from '../../../advisor/components/AdvisorCTA';
 
 interface BusinessModelCanvasTabProps {

@@ -21,7 +21,7 @@ import {
   markNotificationAsRead, 
   markAllNotificationsAsRead,
   deleteNotification 
-} from '../services/notificationService';
+} from '../../../services/notificationService';
 
 interface NotificationsProps {
   onNavigate?: (view: any) => void;

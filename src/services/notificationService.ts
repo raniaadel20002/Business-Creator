@@ -190,15 +190,11 @@ export const subscribeToNotifications = (
   };
   window.addEventListener('bc_notifications_changed', handleLocalChange);
 
-  // 3. Fallback polling
-  const interval = setInterval(() => {
-    fetchAndMergeNotifications();
-  }, 6000);
+  // 3. Fallback polling removed: Supabase Realtime and local event listener cover updates
 
   return () => {
     isSubscribed = false;
     window.removeEventListener('bc_notifications_changed', handleLocalChange);
-    clearInterval(interval);
     if (channel) {
       try {
         supabase.removeChannel(channel);
@@ -222,7 +218,7 @@ export const markNotificationAsRead = async (notificationId: string, userId?: st
 
   // Remote update
   try {
-    if (!notificationId.startsWith('local-') && !notificationId.startsWith('notif-')) {
+    if (!notificationId.startsWith('local-')) {
       await supabase
         .from('notifications')
         .update({ read: true })
@@ -271,7 +267,7 @@ export const deleteNotification = async (notificationId: string, userId?: string
 
   // Remote delete
   try {
-    if (!notificationId.startsWith('local-') && !notificationId.startsWith('notif-')) {
+    if (!notificationId.startsWith('local-')) {
       await supabase
         .from('notifications')
         .delete()

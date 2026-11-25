@@ -1,7 +1,7 @@
 import React from 'react';
 import { ShieldCheck, Zap, ExternalLink, Lightbulb, DollarSign, Wrench, Search, Check, GraduationCap } from 'lucide-react';
 import { BusinessPlan, UserProfile, UserData, ChallengeAdviceItem } from '../../../../types/types';
-import { FormattedText } from '../../../../../components/shared/FormattedText';
+import { FormattedText } from '../../../../components/shared/FormattedText';
 import { AdvisorCTA } from '../../../advisor/components/AdvisorCTA';
 
 interface ResourcesTabProps {

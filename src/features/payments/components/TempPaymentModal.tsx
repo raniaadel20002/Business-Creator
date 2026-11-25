@@ -11,7 +11,7 @@ import {
   TEMP_PAYMENT_CONFIG, 
   getWhatsAppPaymentUrl, 
   sendPaymentRequestToAdmin 
-} from '../server/services/payments/tempPaymentService';
+} from '../../../api/paymentClient';
 import { useAuth } from '../../auth/context/AuthContext';
 
 interface TempPaymentModalProps {

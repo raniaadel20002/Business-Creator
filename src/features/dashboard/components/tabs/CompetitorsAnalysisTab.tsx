@@ -1,7 +1,7 @@
 import React from 'react';
 import { Target, Check, AlertTriangle, ExternalLink, Award } from 'lucide-react';
 import { BusinessPlan } from '../../../../types/types';
-import { FormattedText, cleanText } from '../../../../../components/shared/FormattedText';
+import { FormattedText, cleanText } from '../../../../components/shared/FormattedText';
 import { AdvisorCTA } from '../../../advisor/components/AdvisorCTA';
 
 interface CompetitorsAnalysisTabProps {

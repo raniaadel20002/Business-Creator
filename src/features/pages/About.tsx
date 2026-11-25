@@ -1,6 +1,6 @@
 import React from 'react';
 import { Target, Users, Zap, PlusCircle, Compass, UserCog } from 'lucide-react';
-import Logo from '../../../components/shared/Logo';
+import Logo from '../../components/shared/Logo';
 
 interface AboutProps {
   onStartProject?: () => void;

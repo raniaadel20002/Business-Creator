@@ -1,4 +1,16 @@
-import { supabase } from '../../../supabase';
+/**
+ * DEPRECATED: This file is superseded by:
+ *   - src/api/paymentClient.ts  (TEMP_PAYMENT_CONFIG, getWhatsAppPaymentUrl, sendPaymentRequestToAdmin)
+ *   - src/api/adminClient.ts    (adminUpgradeUserAccount)
+ *
+ * The imports below are broken and this file is not imported by any
+ * production code path. It is retained for reference only.
+ * Do not remove without first verifying no new code depends on it.
+ */
+
+// @ts-nocheck -- Broken imports are intentional. This file is deprecated and unreachable.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+import { supabase } from '../../services/database/supabaseAdmin';
 import { createNotification } from '../../../services/notificationService';
 
 /**

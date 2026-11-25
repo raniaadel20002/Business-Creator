@@ -1,7 +1,7 @@
 import React from 'react';
 import { Landmark, FileText, LineChart, Users, MapPin, Phone, Globe } from 'lucide-react';
 import { BusinessPlan } from '../../../../types/types';
-import { FormattedText } from '../../../../../components/shared/FormattedText';
+import { FormattedText } from '../../../../components/shared/FormattedText';
 import { AdvisorCTA } from '../../../advisor/components/AdvisorCTA';
 
 interface InvestmentTabProps {

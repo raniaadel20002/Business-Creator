@@ -1,7 +1,7 @@
 import React from 'react';
 import { Target, Users, Database, Heart, CheckSquare, Coins, Truck } from 'lucide-react';
 import { BusinessPlan } from '../../../../types/types';
-import { FormattedText } from '../../../../../components/shared/FormattedText';
+import { FormattedText } from '../../../../components/shared/FormattedText';
 import { AdvisorCTA } from '../../../advisor/components/AdvisorCTA';
 
 interface TargetAudienceTabProps {

@@ -1,7 +1,10 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import React, { createContext, useContext, useEffect } from 'react';
+import { User } from '@supabase/supabase-js';
 import { supabase } from '../../../services/supabase';
 import { UserProfile } from '../../../types/types';
+import { useAuthStore } from '../../../store/authStore';
+
+// ---- Public contract — unchanged so every consumer keeps working ----
 
 interface AuthContextType {
   user: User | null;
@@ -17,12 +20,17 @@ const AuthContext = createContext<AuthContextType>({
   updateProfile: async () => {},
 });
 
-export const useAuth = () => useContext(AuthContext);
+// useAuth reads directly from the Zustand store so it is always fresh
+// without needing React context propagation. The return type is identical
+// to the old contract — no consumer changes required.
+export const useAuth = (): AuthContextType => {
+  const { user, profile, loading } = useAuthStore();
+  const { updateProfile } = useContext(AuthContext);
+  return { user, profile, loading, updateProfile };
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { setUser, setProfile, setLoading, updateProfileLocally } = useAuthStore();
 
   // Fetch & upsert profile from Supabase
   const fetchOrCreateProfile = async (currentUser: User) => {
@@ -40,7 +48,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (!existingProfile) {
-        // Create new profile — use snake_case keys for Supabase
         const newProfileDb = {
           id: currentUser.id,
           email: currentUser.email || '',
@@ -65,9 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setProfile(mapDbToProfile(inserted));
         }
       } else {
-        // Migrate missing fields
         const updates: any = {};
-        // Note: 'uid' is not a DB column — 'id' is the PK, no migration needed for it
         if (!existingProfile.email) updates.email = currentUser.email || '';
         if (!existingProfile.display_name && currentUser.user_metadata?.full_name) {
           updates.display_name = currentUser.user_metadata.full_name;
@@ -96,13 +101,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Subscribe to auth state changes
+    // Guard against duplicate fetches when both onAuthStateChange and
+    // getSession fire for the same user on initial mount.
+    let hasFetched = false;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
 
       if (currentUser) {
         setLoading(true);
+        hasFetched = true;
         await fetchOrCreateProfile(currentUser);
       } else {
         setProfile(null);
@@ -110,12 +119,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    // Load initial session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
       if (currentUser) {
-        await fetchOrCreateProfile(currentUser);
+        if (!hasFetched) {
+          await fetchOrCreateProfile(currentUser);
+        }
       } else {
         setLoading(false);
       }
@@ -124,12 +134,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       subscription.unsubscribe();
     };
+    // fetchOrCreateProfile depends on store setters which are stable references
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const updateProfile = async (data: Partial<UserProfile>) => {
-    if (!user) return;
+    const currentUser = useAuthStore.getState().user;
+    if (!currentUser) return;
     // Optimistic update
-    setProfile(prev => prev ? { ...prev, ...data } as UserProfile : null);
+    updateProfileLocally(data);
 
     const dbData = mapProfileToDb(data);
     dbData.updated_at = new Date().toISOString();
@@ -137,7 +150,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { error } = await supabase
       .from('users')
       .update(dbData)
-      .eq('id', user.id);
+      .eq('id', currentUser.id);
 
     if (error) {
       console.error('Error updating profile:', {
@@ -150,8 +163,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // The Provider only needs to supply updateProfile — user/profile/loading are
+  // read directly from the Zustand store in useAuth() so the stale-closure
+  // issue with context value snapshotting does not apply.
   return (
-    <AuthContext.Provider value={{ user, profile, loading, updateProfile }}>
+    <AuthContext.Provider value={{ user: null, profile: null, loading: false, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

@@ -6,7 +6,7 @@ export const GOVERNORATES = [
   "مطروح", "شمال سيناء", "جنوب سيناء"
 ];
 
-const BUDGET_RANGES = [
+export const BUDGET_RANGES = [
   { label: "بدون رأس مال (أبدأ من الصفر)", value: "zero" },
   { label: "أقل من 30,000 ج.م", value: "under_30k" },
   { label: "30,000 - 100,000 ج.م", value: "30k_100k" },
@@ -14,7 +14,7 @@ const BUDGET_RANGES = [
   { label: "أكثر من 500,000 ج.م", value: "above_500k" }
 ];
 
-const INTERESTS = [
+export const INTERESTS = [
   "تكنولوجيا", "أزياء وملابس", "أغذية ومشروبات", "تعليم", "صحة وجمال", "تجارة إلكترونية", 
   "خدمات لوجستية", "زراعة", "صناعات يدوية", "عقارات", "سياحة"
 ];

@@ -4,7 +4,11 @@ import { loadEnv } from './load-env.mjs';
 const envVars = loadEnv();
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || envVars.VITE_SUPABASE_URL || envVars.SUPABASE_URL || 'https://yeuivdauozcqwyraaztx.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || envVars.SUPABASE_SERVICE_ROLE_KEY || envVars.VITE_SUPABASE_ANON_KEY || 'sb_publishable_UKM5RbPgMjVitDc5D3wk0Q_pqyxsYla';
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || envVars.SUPABASE_SERVICE_ROLE_KEY || envVars.VITE_SUPABASE_ANON_KEY;
+if (!SUPABASE_KEY) {
+  console.error('No Supabase key found in environment. Set SUPABASE_SERVICE_ROLE_KEY or VITE_SUPABASE_ANON_KEY.');
+  process.exit(1);
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -90,9 +94,10 @@ async function runFullDiagnosis() {
 
   // 4. Test Available Gemini Models (Quota & Rate Limit Health Check)
   console.log('\n🤖 [4/5] Testing AI Models Availability & Quotas...');
-  let geminiKey = process.env.VITE_GEMINI_API_KEY || envVars.VITE_GEMINI_API_KEY || envVars.GEMINI_API_KEY;
-  if (!geminiKey || !geminiKey.startsWith("AIzaSy")) {
-    geminiKey = "AIzaSyBMEPQ7zM9akR0ht5AQryrCPQ65asqpZog";
+  const geminiKey = process.env.VITE_GEMINI_API_KEY || envVars.VITE_GEMINI_API_KEY || envVars.GEMINI_API_KEY;
+  if (!geminiKey) {
+    console.log('   No Gemini API Key found in environment. Set GEMINI_API_KEY or VITE_GEMINI_API_KEY.');
+    return;
   }
 
   if (geminiKey) {

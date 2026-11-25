@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { User, Settings, LogOut, Save, Sparkles, Edit3, BadgeCheck, Zap } from 'lucide-react';
 import { logOut } from '../../../services/supabase';
-import { getDailyGenerationStatus } from '../../../types/types';
+import { getDailyGenerationStatus } from '../../../hooks/useGenerationStatus';
 import { InsufficientTokensCard } from '../../payments/components/InsufficientTokensCard';
 
 interface ProfileProps {
